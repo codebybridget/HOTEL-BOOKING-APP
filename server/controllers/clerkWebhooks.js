@@ -12,8 +12,11 @@ const clerkwebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
+    // Convert raw body buffer → string
+    const payload = req.body.toString("utf8");
+
     // Verify and parse event
-    const evt = whook.verify(req.body, headers);
+    const evt = whook.verify(payload, headers);
 
     const { data, type } = evt;
 
@@ -25,18 +28,21 @@ const clerkwebhooks = async (req, res) => {
     };
 
     switch (type) {
-      case "user.created": {
+      case "user.created":
+        console.log("👉 Creating user:", userData);
         await User.create(userData);
         break;
-      }
-      case "user.updated": {
+
+      case "user.updated":
+        console.log("👉 Updating user:", userData);
         await User.findByIdAndUpdate(data.id, userData, { new: true });
         break;
-      }
-      case "user.deleted": {
+
+      case "user.deleted":
+        console.log("👉 Deleting user:", data.id);
         await User.findByIdAndDelete(data.id);
         break;
-      }
+
       default:
         console.log("Unhandled event:", type);
         break;
@@ -44,7 +50,7 @@ const clerkwebhooks = async (req, res) => {
 
     res.json({ success: true, message: "Webhook received" });
   } catch (error) {
-    console.error("Webhook error:", error.message);
+    console.error("❌ Webhook error:", error.message);
     res.status(400).json({ success: false, message: error.message });
   }
 };
