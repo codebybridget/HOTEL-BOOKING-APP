@@ -15,19 +15,20 @@ connectCloudinary();
 
 const app = express();
 
-// Normal global middleware
+// Global middlewares
 app.use(cors());
-app.use(express.json()); // ✅ JSON parsing for all other routes
-app.use(clerkMiddleware());
+app.use(express.json());
+app.use(clerkMiddleware()); // adds req.auth
 
-// Webhook route needs raw body (Buffer), not parsed JSON
+// Webhooks need raw body (skip json parsing here)
 app.post(
   "/api/clerk",
-  express.raw({ type: "application/json" }), // <-- raw middleware here
+  express.raw({ type: "application/json" }),
   clerkWebhooks
 );
 
-app.get("/", (req, res) => res.send("API is working"));
+app.get("/", (req, res) => res.send("API is working ✅"));
+
 app.use("/api/user", userRouter);
 app.use("/api/hotels", hotelRouter);
 app.use("/api/room", roomRouter);
