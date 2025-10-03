@@ -2,6 +2,7 @@ services:
   - type: web
     name: hotel-booking-backend
     env: node
+    rootDir: server
     buildCommand: npm install
     startCommand: npm start
     envVars:
