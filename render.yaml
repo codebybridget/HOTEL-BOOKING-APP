@@ -2,7 +2,8 @@ services:
   - type: web
     name: hotel-booking-backend
     env: node
-    root: backend         # THIS MUST MATCH THE BACKEND FOLDER
+    nodeVersion: 20.7.0      # match your local Node
+    root: backend
     buildCommand: npm install
     startCommand: npm start
     envVars:
