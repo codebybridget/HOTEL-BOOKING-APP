@@ -2,7 +2,7 @@ services:
   - type: web
     name: hotel-booking-backend
     env: node
-    rootDir: backend
+    root: backend         # THIS MUST MATCH THE BACKEND FOLDER
     buildCommand: npm install
     startCommand: npm start
     envVars:
