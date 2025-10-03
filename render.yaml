@@ -2,19 +2,21 @@ services:
   - type: web
     name: hotel-booking-backend
     env: node
-    branch: main
-    region: oregon
-    plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MONGO_URI
+      - key: MONGODB_URL
         sync: false
-      - key: CLOUDINARY_URL
+      - key: CLERK_PUBLISHABLE_KEY
         sync: false
       - key: CLERK_SECRET_KEY
         sync: false
       - key: CLERK_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
