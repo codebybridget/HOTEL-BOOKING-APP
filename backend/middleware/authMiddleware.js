@@ -12,7 +12,12 @@ export const protect = async (req, res, next) => {
       secretKey: process.env.CLERK_SECRET_KEY,
     });
 
+    if (!payload || !payload.sub) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+
     let user = await User.findOne({ clerkId: payload.sub });
+
     if (!user) {
       // auto-create user if not in DB
       user = await User.create({

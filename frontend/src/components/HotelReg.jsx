@@ -4,8 +4,7 @@ import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
 const HotelReg = () => {
-  const { setShowHotelReg, axios, getToken, setIsOwner, navigate } =
-    useAppContext();
+  const { setShowHotelReg, axios, setIsOwner, navigate } = useAppContext();
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -15,21 +14,12 @@ const HotelReg = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
-      // 🔑 Get Clerk token with template
-      const token = await getToken({ template: "default" });
-      console.log("🔑 Clerk token:", token);
-
-      if (!token) {
-        toast.error("No authentication token found. Please sign in first.");
-        return;
-      }
-
-      // 🚀 Send request with token
-      const { data } = await axios.post(
-        "/api/hotels",
-        { name, contact, address, city },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await axios.post("/api/hotels", {
+        name,
+        contact,
+        address,
+        city,
+      });
 
       if (data.success) {
         toast.success(data.message);
@@ -40,8 +30,12 @@ const HotelReg = () => {
         toast.error(data.message);
       }
     } catch (error) {
+      if (error.response?.status === 401) {
+        toast.error("Authentication failed. Please sign out and sign in again.");
+      } else {
+        toast.error(error.response?.data?.message || error.message);
+      }
       console.error("❌ Error in HotelReg:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || error.message);
     }
   };
 
@@ -64,7 +58,6 @@ const HotelReg = () => {
 
         {/* Form */}
         <div className="relative flex flex-col items-center md:w-1/2 p-8 md:p-10">
-          {/* Close */}
           <img
             src={assets.closeIcon}
             alt="Close registration form"
@@ -74,7 +67,6 @@ const HotelReg = () => {
 
           <p className="text-2xl font-semibold mt-6">Register Your Hotel</p>
 
-          {/* Hotel Name */}
           <div className="w-full mt-4">
             <label htmlFor="name" className="font-medium text-gray-500">
               Hotel Name
@@ -92,7 +84,6 @@ const HotelReg = () => {
             />
           </div>
 
-          {/* Phone */}
           <div className="w-full mt-4">
             <label htmlFor="contact" className="font-medium text-gray-500">
               Phone
@@ -110,7 +101,6 @@ const HotelReg = () => {
             />
           </div>
 
-          {/* Address */}
           <div className="w-full mt-4">
             <label htmlFor="address" className="font-medium text-gray-500">
               Address
@@ -128,7 +118,6 @@ const HotelReg = () => {
             />
           </div>
 
-          {/* City */}
           <div className="w-full mt-4 max-w-60 mr-auto">
             <label htmlFor="city" className="font-medium text-gray-500">
               City
@@ -143,15 +132,14 @@ const HotelReg = () => {
               required
             >
               <option value="">Select City</option>
-              {cities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             className="bg-indigo-500 hover:bg-indigo-600 transition-all text-white mr-auto px-6 py-2 rounded cursor-pointer mt-6"
