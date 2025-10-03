@@ -18,13 +18,25 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
 
+  // Axios interceptor to automatically attach fresh Clerk token
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      async (config) => {
+        const token = await getToken({ template: "default" });
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+    };
+  }, [getToken]);
+
   const fetchUser = async () => {
     try {
-      const token = await getToken({ template: "default" }); // ✅ fixed
-      const { data } = await axios.get("/api/user", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const { data } = await axios.get("/api/user"); // token auto-attached
       if (data.success) {
         setIsOwner(data.role === "hotelOwner");
         setSearchedCities(data.recentSearchedCities);
@@ -37,9 +49,7 @@ export const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchUser();
-    }
+    if (user) fetchUser();
   }, [user]);
 
   const value = {
