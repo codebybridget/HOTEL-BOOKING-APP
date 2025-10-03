@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: hotel-booking-backend
+    name: hotel-booking-server
     env: node
     rootDir: server
     buildCommand: npm install
