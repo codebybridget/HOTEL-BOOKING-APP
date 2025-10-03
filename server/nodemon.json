@@ -1,0 +1,10 @@
+{
+  "watch": ["server.js", "routes", "controllers", "models"],
+  "ignore": ["node_modules", ".git", "public", ".env", "package-lock.json"],
+  "ext": "js,json",
+  "delay": "500",
+  "verbose": true,
+  "events": {
+    "restart": "echo [Nodemon] Restarted due to changes in: $FILENAME"
+  }
+}
