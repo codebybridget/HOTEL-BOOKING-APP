@@ -4,38 +4,45 @@ import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
 const HotelReg = () => {
-  const { setShowHotelReg, axios, setIsOwner, navigate } = useAppContext();
+  const { setShowHotelReg, axios, getToken, setIsOwner, navigate } = useAppContext();
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [contact, setContact] = useState("");
   const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ NEW state
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setLoading(true); // ✅ Start loading
     try {
-      const { data } = await axios.post("/api/hotels", {
-        name,
-        contact,
-        address,
-        city,
-      });
+      const token = await getToken({ template: "default" });
+
+      if (!token) {
+        toast.error("No authentication token found. Please sign in first.");
+        setLoading(false);
+        return;
+      }
+
+      const { data } = await axios.post(
+        "/api/hotels/",
+        { name, contact, address, city },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || "Hotel registered successfully!");
         setIsOwner(true);
         setShowHotelReg(false);
         navigate("/owner");
       } else {
-        toast.error(data.message);
+        toast.error(data.message || "Something went wrong.");
       }
     } catch (error) {
-      if (error.response?.status === 401) {
-        toast.error("Authentication failed. Please sign out and sign in again.");
-      } else {
-        toast.error(error.response?.data?.message || error.message);
-      }
-      console.error("❌ Error in HotelReg:", error.response?.data || error.message);
+      console.error("❌ Registration error:", error);
+      toast.error(error.response?.data?.message || "Failed to register hotel.");
+    } finally {
+      setLoading(false); // ✅ Stop loading in both success/failure
     }
   };
 
@@ -58,6 +65,7 @@ const HotelReg = () => {
 
         {/* Form */}
         <div className="relative flex flex-col items-center md:w-1/2 p-8 md:p-10">
+          {/* Close */}
           <img
             src={assets.closeIcon}
             alt="Close registration form"
@@ -67,84 +75,110 @@ const HotelReg = () => {
 
           <p className="text-2xl font-semibold mt-6">Register Your Hotel</p>
 
+          {/* Hotel Name */}
           <div className="w-full mt-4">
             <label htmlFor="name" className="font-medium text-gray-500">
               Hotel Name
             </label>
             <input
               id="name"
-              name="name"
-              autoComplete="organization"
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              type="text"
               placeholder="Type hotel name"
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
               required
             />
           </div>
 
+          {/* Phone */}
           <div className="w-full mt-4">
             <label htmlFor="contact" className="font-medium text-gray-500">
               Phone
             </label>
             <input
               id="contact"
-              name="contact"
-              autoComplete="tel"
+              type="text"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
-              type="tel"
               placeholder="Enter phone number"
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
               required
             />
           </div>
 
+          {/* Address */}
           <div className="w-full mt-4">
             <label htmlFor="address" className="font-medium text-gray-500">
               Address
             </label>
             <input
               id="address"
-              name="address"
-              autoComplete="street-address"
+              type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              type="text"
               placeholder="Enter street address"
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
               required
             />
           </div>
 
+          {/* City */}
           <div className="w-full mt-4 max-w-60 mr-auto">
             <label htmlFor="city" className="font-medium text-gray-500">
               City
             </label>
             <select
               id="city"
-              name="city"
-              autoComplete="address-level2"
               value={city}
               onChange={(e) => setCity(e.target.value)}
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
               required
             >
               <option value="">Select City</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {cities.map((cityItem) => (
+                <option key={cityItem} value={cityItem}>
+                  {cityItem}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
-            className="bg-indigo-500 hover:bg-indigo-600 transition-all text-white mr-auto px-6 py-2 rounded cursor-pointer mt-6"
+            disabled={loading} // ✅ Disable while submitting
+            className={`${
+              loading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600"
+            } transition-all text-white mr-auto px-6 py-2 rounded mt-6 flex items-center gap-2`}
           >
-            Register
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+                Registering...
+              </>
+            ) : (
+              "Register"
+            )}
           </button>
         </div>
       </form>

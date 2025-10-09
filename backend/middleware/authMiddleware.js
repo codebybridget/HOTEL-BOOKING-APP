@@ -1,35 +1,27 @@
-import { verifyToken } from "@clerk/backend";
-import User from "../models/User.js";
+import { getAuth } from "@clerk/express";
 
 export const protect = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    if (!token) {
-      return res.status(401).json({ success: false, message: "No token provided" });
-    }
+    console.log("🟣 Headers received:", req.headers.authorization);
+    const { userId, sessionId, claims } = getAuth(req);
+    console.log("🟢 Clerk userId:", userId);
+    console.log("🟢 Clerk sessionId:", sessionId);
+    console.log("🟢 Clerk claims:", claims);
 
-    const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
-
-    if (!payload || !payload.sub) {
-      return res.status(401).json({ success: false, message: "Invalid token" });
-    }
-
-    let user = await User.findOne({ clerkId: payload.sub });
-
-    if (!user) {
-      // auto-create user if not in DB
-      user = await User.create({
-        clerkId: payload.sub,
-        email: payload.emailAddresses?.[0]?.emailAddress || "",
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: No user ID found. Please log in.",
       });
     }
 
-    req.user = user;
+    req.userId = userId;
     next();
   } catch (error) {
-    console.error("❌ Protect middleware error:", error.message);
-    res.status(401).json({ success: false, message: "Not authenticated" });
+    console.error("🔴 Clerk Auth Middleware Error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Authentication failed. Invalid or expired token.",
+    });
   }
 };

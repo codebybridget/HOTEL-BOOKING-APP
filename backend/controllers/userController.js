@@ -1,31 +1,29 @@
 
-// get /api/user/
-export const getUserData = async (req, res)=>{
-    try {
-       const role = req.user.role;
-       const recetSearchedCities = req.user.recetSearchedCities;
-        res.json({success: true, role, recetSearchedCities}) 
-    } catch (error) {
-        res.json({success: false, message: error.message})
+export const getUserData = async (req, res) => {
+  try {
+    const role = req.user.role;
+    const recentSearchedCities = req.user.recentSearchedCities; 
+    res.json({ success: true, role, recentSearchedCities });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export const storeRecentSearchedCities = async (req, res) => {
+  try {
+    const { recentSearchedCity } = req.body; 
+    const user = req.user; 
+
+    if (user.recentSearchedCities.length < 3) {
+      user.recentSearchedCities.push(recentSearchedCity);
+    } else {
+      user.recentSearchedCities.shift();
+      user.recentSearchedCities.push(recentSearchedCity);
     }
-}
 
-
-export const storeRecetSearchedCities = async (req, res)=>{
-    try {
-        const {recetSearchedCity} = req.body
-        const user = await req.user;
-
-        if(user.recetSearchedCities.length < 3) {
-            user.recetSearchedCities.push(recetSearchedCity)
-        }else{
-            user.recetSearchedCities.shift();
-             user.recetSearchedCities.push(recetSearchedCity)
-        }
-        await user.save();
-        res.json({success: true, message: "City added"})
-    } catch (error) {
-        res.json({success: false, message: error.message})
-        
-    }
-}
+    await user.save();
+    res.json({ success: true, message: "City added" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
