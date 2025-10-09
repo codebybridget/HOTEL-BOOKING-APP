@@ -18,12 +18,23 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
 
-  // Axios interceptor to automatically attach fresh Clerk token
+  // ✅ Automatically attach Clerk backend token to all axios requests
   useEffect(() => {
     const requestInterceptor = axios.interceptors.request.use(
       async (config) => {
-        const token = await getToken({ template: "default" });
-        if (token) config.headers.Authorization = `Bearer ${token}`;
+        try {
+          const token = await getToken({ template: "backend" });
+          console.log("🟣 Clerk token from frontend:", token); // 👈 Debug token
+          console.log("📡 Requesting:", config.url);
+
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          } else {
+            console.warn("⚠️ No token returned from Clerk — check your JWT template!");
+          }
+        } catch (error) {
+          console.error("❌ Failed to get Clerk token:", error);
+        }
         return config;
       },
       (error) => Promise.reject(error)
@@ -34,22 +45,37 @@ export const AppProvider = ({ children }) => {
     };
   }, [getToken]);
 
+  // ✅ Fetch user data from backend
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get("/api/user"); // token auto-attached
+      const token = await getToken({ template: "backend" });
+      console.log("🔵 Fetching user with token:", token ? "✅ Exists" : "❌ Missing");
+
+      const { data } = await axios.get("/api/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (data.success) {
         setIsOwner(data.role === "hotelOwner");
-        setSearchedCities(data.recentSearchedCities);
+        setSearchedCities(data.recentSearchedCities || []);
       } else {
+        console.warn("⚠️ Backend user fetch failed, retrying...");
         setTimeout(fetchUser, 5000);
       }
     } catch (error) {
-      toast.error(error.message);
+      console.error("❌ Error fetching user:", error);
+      toast.error("Failed to load user information.");
     }
   };
 
+  // ✅ Re-fetch user when Clerk user changes
   useEffect(() => {
-    if (user) fetchUser();
+    if (user) {
+      console.log("👤 Clerk user detected:", user.id);
+      fetchUser();
+    } else {
+      console.warn("⚠️ No Clerk user logged in");
+    }
   }, [user]);
 
   const value = {

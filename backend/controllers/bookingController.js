@@ -26,8 +26,7 @@ export const checkAvailabilityAPI = async (req, res) => {
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
-      room,
-    });
+      room});
     res.json({ success: true, isAvailable });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -44,9 +43,7 @@ export const createBooking = async (req, res) => {
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
-      room,
-    });
-
+      room});
     if (!isAvailable) {
       return res.json({ success: false, message: "Room is not available" });
     }
@@ -109,14 +106,10 @@ export const getHotelBookings = async (req, res) => {
 
     const totalBookings = bookings.length;
     const totalRevenue = bookings.reduce(
-      (acc, booking) => acc + booking.totalprice,
-      0
-    );
+      (acc, booking) => acc + booking.totalPrice,0)
 
-    res.json({
-      success: true,
-      dashboardData: { totalBookings, totalRevenue, bookings },
-    });
+    res.json({success: true, dashboardData: { totalBookings, totalRevenue, 
+      bookings }})
   } catch (error) {
     res.json({ success: false, message: "Failed to fetch hotel bookings" });
   }
