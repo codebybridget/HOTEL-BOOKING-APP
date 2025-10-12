@@ -4,7 +4,7 @@ import Hotel from "../models/Hotel.js";
 
 
 
-// function to check availability of room
+
 const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
     const booking = await Booking.find({
@@ -19,7 +19,7 @@ const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   }
 };
 
-// POST /api/bookings/check-availability
+
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, room } = req.body;
@@ -33,13 +33,13 @@ export const checkAvailabilityAPI = async (req, res) => {
   }
 };
 
-// POST /api/bookings/book
+
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
     const user = req.user._id;
 
-//  Check availability before booking
+
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
@@ -48,11 +48,11 @@ export const createBooking = async (req, res) => {
       return res.json({ success: false, message: "Room is not available" });
     }
 
-    //  get totalprice room room
+  
     const roomData = await Room.findById(room).populate("hotel");
     let totalprice = roomData.pricePerNight;
 
-    //  Calculate number of nights
+    
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
     const timeDiff = checkOut.getTime() - checkIn.getTime();
@@ -60,7 +60,7 @@ export const createBooking = async (req, res) => {
 
     totalprice *= nights;
 
-    // Create booking
+   
     const booking = await Booking.create({
       user,
       room,
@@ -78,7 +78,7 @@ export const createBooking = async (req, res) => {
   }
 };
 
-// GET /api/bookings/user
+
 export const getUserBookings = async (req, res) => {
   try {
     const user = req.user._id;
@@ -91,7 +91,7 @@ export const getUserBookings = async (req, res) => {
   }
 };
 
-// GET /api/bookings/hotel-owner
+
 export const getHotelBookings = async (req, res) => {
   try {
     const hotel = await Hotel.findOne({ owner: req.auth.userId });
