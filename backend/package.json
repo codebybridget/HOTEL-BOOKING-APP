@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.15.0",
-    "@clerk/express": "^1.7.33",
+    "@clerk/express": "^1.7.37",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
