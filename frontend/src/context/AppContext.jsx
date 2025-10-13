@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
+// ✅ Set backend base URL from environment
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 const AppContext = createContext();
@@ -11,26 +12,27 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const currency = import.meta.env.VITE_CURRENCY || "$";
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
 
   const [isOwner, setIsOwner] = useState(false);
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
 
-  // ✅ Automatically attach Clerk backend token to all axios requests
+  /**
+   * ✅ Automatically attach Clerk backend token to all axios requests
+   */
   useEffect(() => {
     const requestInterceptor = axios.interceptors.request.use(
       async (config) => {
         try {
+          // 🔑 Use the JWT template name EXACTLY as in Clerk dashboard ("backend")
           const token = await getToken({ template: "backend" });
-          console.log("🟣 Clerk token from frontend:", token); // 👈 Debug token
-          console.log("📡 Requesting:", config.url);
 
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           } else {
-            console.warn("⚠️ No token returned from Clerk — check your JWT template!");
+            console.warn("⚠️ No token returned from Clerk — check JWT template name.");
           }
         } catch (error) {
           console.error("❌ Failed to get Clerk token:", error);
@@ -45,11 +47,17 @@ export const AppProvider = ({ children }) => {
     };
   }, [getToken]);
 
-  // ✅ Fetch user data from backend
+  /**
+   * ✅ Fetch user details from backend
+   */
   const fetchUser = async () => {
     try {
       const token = await getToken({ template: "backend" });
-      console.log("🔵 Fetching user with token:", token ? "✅ Exists" : "❌ Missing");
+
+      if (!token) {
+        console.warn("⚠️ Missing token — cannot fetch user.");
+        return;
+      }
 
       const { data } = await axios.get("/api/user", {
         headers: { Authorization: `Bearer ${token}` },
@@ -59,24 +67,25 @@ export const AppProvider = ({ children }) => {
         setIsOwner(data.role === "hotelOwner");
         setSearchedCities(data.recentSearchedCities || []);
       } else {
-        console.warn("⚠️ Backend user fetch failed, retrying...");
-        setTimeout(fetchUser, 5000);
+        console.warn("⚠️ Backend responded without success:", data);
       }
     } catch (error) {
-      console.error("❌ Error fetching user:", error);
+      console.error("❌ Error fetching user from backend:", error);
       toast.error("Failed to load user information.");
     }
   };
 
-  // ✅ Re-fetch user when Clerk user changes
+  /**
+   * ✅ Re-fetch user data when Clerk user changes
+   */
   useEffect(() => {
-    if (user) {
+    if (isLoaded && user) {
       console.log("👤 Clerk user detected:", user.id);
       fetchUser();
-    } else {
-      console.warn("⚠️ No Clerk user logged in");
+    } else if (isLoaded && !user) {
+      console.warn("⚠️ No Clerk user logged in.");
     }
-  }, [user]);
+  }, [user, isLoaded]);
 
   const value = {
     currency,

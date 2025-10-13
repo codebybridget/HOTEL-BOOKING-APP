@@ -41,6 +41,7 @@ const Dashboard = () => {
                 <th className='py-3 px-4 text-gray-800 font-medium text-center'>Payment Status</th>
                </tr>
             </thead>
+            
              <tbody className='text-sm'>
                 {dashboardData.bookings.map((item,index)=>(
                     <tr key={index}>
