@@ -2,7 +2,7 @@ import React from 'react'
 import Title from './Title'
 import StarRating from './StarRating'
 
-// 👇 add this
+// add this
 const testimonials = [
   {
     id: 1,

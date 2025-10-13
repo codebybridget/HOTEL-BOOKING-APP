@@ -6,21 +6,9 @@ const userSchema = new mongoose.Schema(
     username: { type: String, trim: true }, 
     email: { type: String, required: true, unique: true, lowercase: true },
     image: { type: String },
-    role: {
-      type: String,
-      enum: ["user", "hotelOwner", "admin"],
-      default: "user",
-    },
-    recentSearchCities: {
-      type: [String],
-      default: [],
-      validate: {
-        validator: (arr) => arr.length <= 10, 
-        message: "Recent searches cannot exceed 10 cities.",
-      },
-    },
-  },
-  { timestamps: true }
+    role: {type: String, enum: ["user", "hotelOwner"], default: "user", },
+    recentSearchCities: [{type: String, required: true }],
+  },{ timestamps: true }
 );
 
 

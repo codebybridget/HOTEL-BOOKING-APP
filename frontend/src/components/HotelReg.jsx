@@ -10,11 +10,11 @@ const HotelReg = () => {
   const [address, setAddress] = useState("");
   const [contact, setContact] = useState("");
   const [city, setCity] = useState("");
-  const [loading, setLoading] = useState(false); // ✅ NEW state
+  const [loading, setLoading] = useState(false);
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
-    setLoading(true); // ✅ Start loading
+    setLoading(true);
     try {
       const token = await getToken({ template: "default" });
 
@@ -39,10 +39,10 @@ const HotelReg = () => {
         toast.error(data.message || "Something went wrong.");
       }
     } catch (error) {
-      console.error("❌ Registration error:", error);
+      console.error("Registration error:", error);
       toast.error(error.response?.data?.message || "Failed to register hotel.");
     } finally {
-      setLoading(false); // ✅ Stop loading in both success/failure
+      setLoading(false); 
     }
   };
 
@@ -51,28 +51,14 @@ const HotelReg = () => {
       onClick={() => setShowHotelReg(false)}
       className="fixed top-0 bottom-0 left-0 right-0 z-50 flex items-center justify-center bg-black/70"
     >
-      <form
-        onSubmit={onSubmitHandler}
-        onClick={(e) => e.stopPropagation()}
-        className="flex bg-white rounded-xl max-w-4xl max-md:mx-2 shadow-lg"
-      >
-        {/* Image */}
-        <img
-          src={assets.regImage}
-          alt="Hotel Registration"
-          className="w-1/2 rounded-l-xl hidden md:block object-cover"
-        />
+      <form onSubmit={onSubmitHandler} onClick={(e) => e.stopPropagation()}
+        className="flex bg-white rounded-xl max-w-4xl max-md:mx-2">
+        <img src={assets.regImage} alt="Hotel Registration"
+          className="w-1/2 rounded-l-xl hidden md:block"/>
 
-        {/* Form */}
         <div className="relative flex flex-col items-center md:w-1/2 p-8 md:p-10">
-          {/* Close */}
-          <img
-            src={assets.closeIcon}
-            alt="Close registration form"
-            className="absolute top-4 right-4 h-6 w-6 cursor-pointer hover:scale-110 transition"
-            onClick={() => setShowHotelReg(false)}
-          />
-
+          <img src={assets.closeIcon} alt="Close-icon"
+           className="absolute top-4 right-4 h-4 w-4 cursor-pointer" onClick={() => setShowHotelReg(false)}/>
           <p className="text-2xl font-semibold mt-6">Register Your Hotel</p>
 
           {/* Hotel Name */}
@@ -80,15 +66,9 @@ const HotelReg = () => {
             <label htmlFor="name" className="font-medium text-gray-500">
               Hotel Name
             </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Type hotel name"
+            <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Type hotel name"
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            />
+              required/>
           </div>
 
           {/* Phone */}
@@ -96,15 +76,10 @@ const HotelReg = () => {
             <label htmlFor="contact" className="font-medium text-gray-500">
               Phone
             </label>
-            <input
-              id="contact"
-              type="text"
-              value={contact}
+            <input id="contact" type="text" value={contact}
               onChange={(e) => setContact(e.target.value)}
               placeholder="Enter phone number"
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            />
+              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light" required/>
           </div>
 
           {/* Address */}
@@ -112,73 +87,35 @@ const HotelReg = () => {
             <label htmlFor="address" className="font-medium text-gray-500">
               Address
             </label>
-            <input
-              id="address"
-              type="text"
-              value={address}
+            <input id="address" type="text"  value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter street address"
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            />
+              placeholder="Enter street address" className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 
+              outline-indigo-500 font-light" required/>
           </div>
-
-          {/* City */}
+              
+            {/* City */}
           <div className="w-full mt-4 max-w-60 mr-auto">
             <label htmlFor="city" className="font-medium text-gray-500">
               City
             </label>
-            <select
-              id="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            >
+            <select id="city" value={city} onChange={(e) => setCity(e.target.value)}
+              className="border border-gray-200
+             rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light" required>
               <option value="">Select City</option>
-              {cities.map((cityItem) => (
-                <option key={cityItem} value={cityItem}>
-                  {cityItem}
-                </option>
+              {cities.map((city) => (
+                <option key={city} value={city}> {city} </option>
               ))}
             </select>
           </div>
-
+          
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading} // ✅ Disable while submitting
+            disabled={loading} 
             className={`${
               loading ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600"
-            } transition-all text-white mr-auto px-6 py-2 rounded mt-6 flex items-center gap-2`}
-          >
-            {loading ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-                Registering...
-              </>
-            ) : (
-              "Register"
-            )}
+            } transition-all text-white mr-auto px-6 py-2 rounded mt-6 flex items-center gap-2`} >
+              Register
           </button>
         </div>
       </form>
