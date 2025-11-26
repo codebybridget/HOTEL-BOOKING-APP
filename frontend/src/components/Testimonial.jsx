@@ -2,7 +2,6 @@ import React from 'react'
 import Title from './Title'
 import StarRating from './StarRating'
 
-// add this
 const testimonials = [
   {
     id: 1,
@@ -32,36 +31,37 @@ const testimonials = [
 
 const Testimonial = () => {
   return (
-    <div className="flex flex-col items-center text-black px-6 md:px-16 lg:px-24 bg-slate-50 pt-20 pb-30">
+    <div className="flex flex-col items-center text-black px-6 md:px-16 lg:px-24 bg-slate-50 pt-20 pb-28">
       <Title
         title="What Our Guests Say"
         subTitle="Discover why discerning travelers consistently choose QuickStay for their exclusive and luxurious accommodations around the world."
       />
 
       <div className="flex flex-wrap items-center justify-center gap-6 mt-20 mb-10">
-        {testimonials.map((testimonial) => (
+        {testimonials.map((t) => (
           <div
-            key={testimonial.id}
-            className="bg-white p-6 rounded-xl shadow max-w-xs"
+            key={t.id}
+            className="bg-white p-6 rounded-xl shadow max-w-sm"
           >
             <div className="flex items-center gap-3">
               <img
                 className="w-12 h-12 rounded-full"
-                src={testimonial.image}
-                alt={testimonial.name}
+                src={t.image}
+                alt={t.name}
               />
               <div>
-                <p className="font-playfair text-xl">{testimonial.name}</p>
-                <p className="text-gray-500">{testimonial.address}</p>
+                <p className="font-playfair text-xl">{t.name}</p>
+                <p className="text-gray-500">{t.address}</p>
               </div>
             </div>
 
-            {/* Rating block */}
-            <div className="flex items-center gap-1 mt-4">
-              <StarRating rating={testimonial.rating} />
+            <div className="mt-4" aria-label={`Rated ${t.rating} out of 5`}>
+              <StarRating rating={t.rating} />
             </div>
 
-            <p className="text-gray-500 mt-4">"{testimonial.review}"</p>
+            <p className="text-gray-500 mt-4">
+              &ldquo;{t.review}&rdquo;
+            </p>
           </div>
         ))}
       </div>

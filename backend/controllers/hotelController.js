@@ -1,21 +1,45 @@
 import Hotel from "../models/Hotel.js";
-import User from "../models/User.js";
 
-export const registerHotel = async (req,res) =>{
-    try {
-      const {name, address, contact, city} = req.body;
-      const owner = req.user._id
-      
+export const registerHotel = async (req, res) => {
+  try {
+    const ownerId = req.auth.userId;
+    const { name, address, contact, city } = req.body;
 
-      const hotel = await Hotel.findOne({owner})
-       if (hotel){
-        return res.json({success: false, message: "Hotel Already Registered"})
-       }
-       await Hotel.create({name,address, contact, city, owner});
-       await User.findByIdAndUpdate(owner,{role: "hotelowner"});
-
-       res.json({success: true, message: "Hotel Registered Successfully"})
-    } catch (error) {
-        res.json({success: false, message: error.message})
+    if (!name || !address || !contact || !city) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields (name, address, contact, city) are required.",
+      });
     }
-}
+
+    // Check if owner already registered a hotel
+    const existingHotel = await Hotel.findOne({ owner: ownerId });
+    if (existingHotel) {
+      return res.status(400).json({
+        success: false,
+        message: "You already registered a hotel.",
+      });
+    }
+
+    // Create hotel
+    const hotel = await Hotel.create({
+      owner: ownerId,
+      name: name.trim(),
+      address: address.trim(),
+      contact: contact.trim(),
+      city: city.trim(),
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Hotel registered successfully!",
+      hotel,
+    });
+  } catch (error) {
+    console.error("Hotel registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during hotel registration.",
+    });
+  }
+};

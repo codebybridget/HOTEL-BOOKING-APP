@@ -1,65 +1,67 @@
-import express from "express"
+import express from "express";
 import cors from "cors";
-import "dotenv/config";
-import { clerkMiddleware} from "@clerk/express"; 
+import dotenv from "dotenv";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 import connectDB from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
-
-// Routers
 import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 
+dotenv.config();
 
+connectDB();
+connectCloudinary();
 
-connectDB()
-connectCloudinary()
+const app = express();
 
-const app = express()
-app.use(cors())
+// 🔐 CORS (dev + production)
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
+// 🔥 Clerk Webhooks MUST use raw body
+app.use(
+  "/api/clerk",
+  express.raw({ type: "application/json" }),
+  clerkWebhooks
+);
 
-// Middlewares
-app.use(express.json())
-app.use(clerkMiddleware())
+// 📦 Normal JSON body parser AFTER webhook
+app.use(express.json());
 
+// 🔐 Clerk Auth middleware
+app.use(clerkMiddleware());
 
-// API to listen to clerk Webhook )
-app.use("/api/clerk", clerkWebhooks);
-
-
-// ✅ Debug route to confirm Clerk auth works
-app.get("/api/debug-auth", (req, res) => {
-  const { userId, sessionId } = getAuth(req);
-  res.json({
-    message: "Clerk auth debug info",
-    userId,
-    sessionId,
-    authHeader: req.headers.authorization,
-  });
-});
-
-// ✅ Protected Routes
+// 📌 Protected routes (apply requireAuth if needed)
 app.use("/api/user", userRouter);
-app.use("/api/hotels", hotelRouter);
-app.use("/api/room", roomRouter);
-app.use("/api/bookings", bookingRouter);
+app.use("/api/hotels", requireAuth(), hotelRouter);
+app.use("/api/room", requireAuth(), roomRouter);
+app.use("/api/bookings", requireAuth(), bookingRouter);
 
-// ✅ Error handling middleware (optional but useful)
-app.use((err, req, res, next) => {
-  console.error("❌ Server Error:", err);
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error",
+// Test route
+app.get("/api/protected", requireAuth(), (req, res) => {
+  res.json({
+    message: "You are authenticated!",
+    userId: req.auth.userId,
   });
 });
 
+// ❌ 404 Handler
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
-
-
-app.get("/", (req, res) => res.send("API is working fine. "));
+// ❗ Global error handler (recommended)
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+  res.status(500).json({ message: "Server error", error: err.message });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

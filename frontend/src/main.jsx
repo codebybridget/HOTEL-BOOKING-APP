@@ -10,19 +10,22 @@ import { Toaster } from "react-hot-toast";
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Add your Clerk publishable key to the .env file");
+  throw new Error("Missing Clerk publishable key in .env file");
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-    <React.StrictMode>
+  <React.StrictMode>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      afterSignOutUrl="/"
+      afterSignInUrl="/"   // optional but helpful
+    >
       <BrowserRouter>
         <AppProvider>
           <App />
-          {/* Toast Notifications */}
           <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         </AppProvider>
       </BrowserRouter>
-    </React.StrictMode>
-  </ClerkProvider>
+    </ClerkProvider>
+  </React.StrictMode>
 );
