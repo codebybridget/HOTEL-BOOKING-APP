@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { assets, facilityIcons } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import StarRating from "../components/StarRating";
@@ -35,8 +34,6 @@ const AllRooms = () => {
   const { axios } = useAppContext();
 
   const [openFilters, setOpenFilters] = useState(false);
-
-  // 🔥 NEW STATE
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,9 +50,6 @@ const AllRooms = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // =========================
-  // FETCH ROOMS FROM BACKEND
-  // =========================
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -63,6 +57,8 @@ const AllRooms = () => {
 
         if (data.success) {
           setRooms(data.rooms);
+        } else {
+          setRooms([]);
         }
       } catch (error) {
         console.error("Error fetching rooms:", error);
@@ -72,7 +68,7 @@ const AllRooms = () => {
     };
 
     fetchRooms();
-  }, []);
+  }, [axios]);
 
   const toggleType = (label, checked) => {
     setSelectedTypes((prev) =>
@@ -88,7 +84,6 @@ const AllRooms = () => {
 
   return (
     <div className="flex flex-col pt-28 md:pt-36 px-4 md:px-16 lg:px-24 xl:px-32 w-full">
-      {/* Header */}
       <div className="mb-12">
         <h1 className="font-playfair text-3xl md:text-[40px] text-gray-800">
           Hotel Rooms
@@ -99,7 +94,6 @@ const AllRooms = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Filters */}
         <div className="order-1 lg:order-2 w-full lg:w-80 border rounded-lg">
           <div className="flex justify-between px-5 py-3 border-b">
             <p className="font-medium">FILTERS</p>
@@ -144,7 +138,6 @@ const AllRooms = () => {
           </div>
         </div>
 
-        {/* Rooms */}
         <div className="order-2 lg:order-1 flex flex-col gap-8 w-full">
           {loading ? (
             <p>Loading rooms...</p>
@@ -158,7 +151,7 @@ const AllRooms = () => {
               >
                 <img
                   src={room?.images?.[0]}
-                  alt={room?.hotel?.name}
+                  alt={room?.hotel?.name || "Hotel room"}
                   onClick={() => handleNavigate(room._id)}
                   className="md:w-1/2 h-60 object-cover rounded-xl cursor-pointer"
                 />
@@ -181,14 +174,25 @@ const AllRooms = () => {
                   </div>
 
                   <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
-                    <img src={assets.locationIcon} className="w-4" />
+                    <img
+                      src={assets.locationIcon}
+                      alt="Location"
+                      className="w-4"
+                    />
                     <span>{room?.hotel?.address}</span>
                   </div>
 
                   <div className="flex flex-wrap gap-3 mt-3">
                     {room?.amenities?.map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-                        <img src={facilityIcons[item]} className="w-4 h-4" />
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg"
+                      >
+                        <img
+                          src={facilityIcons[item]}
+                          alt={item}
+                          className="w-4 h-4"
+                        />
                         <span className="text-xs">{item}</span>
                       </div>
                     ))}

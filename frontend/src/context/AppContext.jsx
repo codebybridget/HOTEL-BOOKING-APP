@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
-// 🔥 IMPORTANT: SET BASE URL ONCE
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
@@ -25,20 +24,17 @@ export const AppProvider = ({ children }) => {
 
   const currency = import.meta.env.VITE_CURRENCY || "$";
 
-  // =========================
-  // ATTACH CLERK TOKEN
-  // =========================
   useEffect(() => {
     const interceptor = axios.interceptors.request.use(
       async (config) => {
         try {
-          const token = await getToken({ template: "backend" });
+          const token = await getToken();
 
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
-        } catch {
-          console.warn("Token fetch failed");
+        } catch (error) {
+          console.warn("Token fetch failed:", error);
         }
 
         return config;
@@ -49,23 +45,23 @@ export const AppProvider = ({ children }) => {
     return () => axios.interceptors.request.eject(interceptor);
   }, [getToken]);
 
-  // =========================
-  // FETCH USER
-  // =========================
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get("/api/user");
+      const { data } = await axios.get("/api/user/me");
 
       if (data?.success) {
         setIsOwner(data.role === "hotelOwner");
         setSearchedCities(data.recentSearchedCities || []);
-        setRoleLoaded(true);
       } else {
-        toast.error(data?.message || "Auth failed");
+        setIsOwner(false);
+        setSearchedCities([]);
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to load user");
+      console.error("Failed to load user:", error);
+      setIsOwner(false);
+      setSearchedCities([]);
+    } finally {
+      setRoleLoaded(true);
     }
   };
 
@@ -73,25 +69,24 @@ export const AppProvider = ({ children }) => {
     if (isLoaded && user) {
       fetchUser();
     }
+
+    if (isLoaded && !user) {
+      setIsOwner(false);
+      setSearchedCities([]);
+      setRoleLoaded(true);
+    }
   }, [isLoaded, user]);
 
   const value = {
-    // Core
     currency,
     navigate,
     axios,
-
-    // Auth
     user,
     getToken,
     isOwner,
     roleLoaded,
-
-    // UI
     showHotelReg,
     setShowHotelReg,
-
-    // Data
     searchedCities,
     setSearchedCities,
   };
