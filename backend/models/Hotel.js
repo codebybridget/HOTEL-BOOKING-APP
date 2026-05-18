@@ -18,29 +18,52 @@ const hotelSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 7,
+      maxlength: 20,
     },
 
-    // MUST be String only if your User model uses String _id
+    // Clerk user ID (string)
     owner: {
       type: String,
       required: true,
-      unique: true, // Prevent multiple hotels per owner
       ref: "User",
+      index: true, // faster lookup
     },
 
     city: {
       type: String,
       required: true,
       trim: true,
-      lowercase: true, // Normalize city names
+      lowercase: true,
+    },
+
+    // Optional (future scaling)
+    description: {
+      type: String,
+      default: "",
+    },
+
+    images: {
+      type: [String],
+      default: [],
+    },
+
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
     },
   },
   { timestamps: true }
 );
 
-// Add indexes to speed up lookups
-hotelSchema.index({ owner: 1 });
+// ==========================
+// INDEXES
+// ==========================
 hotelSchema.index({ city: 1 });
+hotelSchema.index({ owner: 1 });
 
 const Hotel = mongoose.model("Hotel", hotelSchema);
+
 export default Hotel;

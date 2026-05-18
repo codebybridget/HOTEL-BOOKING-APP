@@ -1,22 +1,20 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
 import { requireAuth } from "@clerk/express";
+import { protect } from "../middleware/authMiddleware.js";
 import {
   getUserData,
-  storeRecentSearchedCities,
+  setUserRole,
 } from "../controllers/userController.js";
 
 const userRouter = express.Router();
 
-// get authenticated user's full profile
 userRouter.get("/", requireAuth(), protect, getUserData);
 
-// store recent city searches
 userRouter.post(
-  "/store-recent-search",
+  "/set-role",
   requireAuth(),
   protect,
-  storeRecentSearchedCities
+  setUserRole
 );
 
 export default userRouter;

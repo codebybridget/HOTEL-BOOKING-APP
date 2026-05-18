@@ -3,62 +3,35 @@ import User from "../models/User.js";
 // Get user data
 export const getUserData = async (req, res) => {
   try {
-    const userId = req.auth.userId;
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    const user = await User.findById(req.auth.userId);
 
     res.json({
       success: true,
-      role: user.role || "guest",
-      recentSearchedCities: user.recentSearchedCities || [],
+      role: user?.role || null, // ✅ IMPORTANT
+      recentSearchedCities: user?.recentSearchedCities || [],
     });
   } catch (error) {
-    console.error("getUserData error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// Store recently searched cities
-export const storeRecentSearchedCities = async (req, res) => {
+// Set user role
+export const setUserRole = async (req, res) => {
   try {
-    const { recentSearchedCity } = req.body;
     const userId = req.auth.userId;
+    const { role } = req.body;
 
-    if (!recentSearchedCity || typeof recentSearchedCity !== "string") {
+    if (!["user", "hotelOwner"].includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid city name",
+        message: "Invalid role",
       });
     }
 
-    const user = await User.findById(userId);
+    await User.findByIdAndUpdate(userId, { role });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    if (!user.recentSearchedCities) {
-      user.recentSearchedCities = [];
-    }
-
-    // Maintain max 3 recent cities
-    if (user.recentSearchedCities.length >= 3) {
-      user.recentSearchedCities.shift();
-    }
-
-    user.recentSearchedCities.push(recentSearchedCity);
-    await user.save();
-
-    res.json({ success: true, message: "City added" });
+    res.json({ success: true, message: "Role updated" });
   } catch (error) {
-    console.error("storeRecentSearchedCities error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

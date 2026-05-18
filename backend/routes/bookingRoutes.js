@@ -5,21 +5,30 @@ import {
   getHotelBookings,
   getUserBookings,
 } from "../controllers/bookingController.js";
+
 import { protect } from "../middleware/authMiddleware.js";
 import { requireAuth } from "@clerk/express";
 
 const bookingRouter = express.Router();
 
-// Public route (optional)
+/* =========================
+   PUBLIC ROUTES
+========================= */
+
+// Check availability
 bookingRouter.post("/check-availability", checkAvailabilityAPI);
 
-// Protected booking creation
-bookingRouter.post("/book", requireAuth(), protect, createBooking);
+/* =========================
+   PROTECTED ROUTES
+========================= */
 
-// Fetch user's bookings
-bookingRouter.get("/user", requireAuth(), protect, getUserBookings);
+// Create booking
+bookingRouter.post("/", requireAuth(), protect, createBooking);
 
-// Hotel owner bookings dashboard
+// Get current user's bookings
+bookingRouter.get("/my", requireAuth(), protect, getUserBookings);
+
+// Hotel owner dashboard bookings
 bookingRouter.get("/hotel", requireAuth(), protect, getHotelBookings);
 
 export default bookingRouter;

@@ -2,6 +2,7 @@ import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { requireAuth } from "@clerk/express";
+
 import {
   createRoom,
   getOwnerRooms,
@@ -11,7 +12,18 @@ import {
 
 const roomRouter = express.Router();
 
-// Create room (Owner only)
+/* =========================
+   PUBLIC ROUTES
+========================= */
+
+// Get all available rooms
+roomRouter.get("/", getRooms);
+
+/* =========================
+   PROTECTED ROUTES
+========================= */
+
+// Create room (hotel owner)
 roomRouter.post(
   "/",
   requireAuth(),
@@ -20,15 +32,12 @@ roomRouter.post(
   createRoom
 );
 
-// Get all available rooms (Public)
-roomRouter.get("/", getRooms);
-
-// Get rooms belonging to hotel owner
+// Get owner's rooms
 roomRouter.get("/owner", requireAuth(), protect, getOwnerRooms);
 
-// Toggle availability (Owner only)
-roomRouter.post(
-  "/toggle-availability",
+// Toggle availability (RESTful)
+roomRouter.patch(
+  "/:id/availability",
   requireAuth(),
   protect,
   toggleRoomAvailability

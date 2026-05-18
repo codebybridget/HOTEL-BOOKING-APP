@@ -3,9 +3,13 @@ import { requireAuth } from "@clerk/express";
 import { protect } from "../middleware/authMiddleware.js";
 import { registerHotel } from "../controllers/hotelController.js";
 
-const router = express.Router();
+const hotelRouter = express.Router();
 
-// Only authenticated users & with full MongoDB user loaded
-router.post("/", requireAuth(), protect, registerHotel);
+/* =========================
+   PROTECTED ROUTES
+========================= */
 
-export default router;
+// Register hotel (one per user)
+hotelRouter.post("/", requireAuth(), protect, registerHotel);
+
+export default hotelRouter;

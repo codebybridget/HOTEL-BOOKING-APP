@@ -3,41 +3,56 @@ import { Webhook } from "svix";
 
 const clerkWebhooks = async (req, res) => {
   try {
-    // 1. Raw body (Buffer) → string
-    const rawBody = req.body.toString("utf8");
+    const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
-    // 2. Validate headers
-    const headers = {
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"],
-    };
-
-    if (!headers["svix-id"]) {
-      return res.status(400).json({ success: false, message: "Missing svix headers" });
+    if (!WEBHOOK_SECRET) {
+      console.error("❌ Missing CLERK_WEBHOOK_SECRET");
+      return res.status(500).json({ success: false });
     }
 
-    // 3. Verify signature
-    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    const event = wh.verify(rawBody, headers);
+    // Raw body
+    const rawBody = req.body.toString("utf8");
 
-    // 4. Extract verified data
+    // Required headers
+    const svixId = req.headers["svix-id"];
+    const svixTimestamp = req.headers["svix-timestamp"];
+    const svixSignature = req.headers["svix-signature"];
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing Svix headers",
+      });
+    }
+
+    const wh = new Webhook(WEBHOOK_SECRET);
+
+    // Verify webhook
+    const event = wh.verify(rawBody, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    });
+
     const { type, data } = event;
 
     const userData = {
-      _id: data.id,  // must match your User schema type (String or ObjectId?)
+      _id: data.id, // Clerk user ID
       email: data.email_addresses?.[0]?.email_address || "",
-      username: [data.first_name, data.last_name].filter(Boolean).join(" "),
+      username: [data.first_name, data.last_name]
+        .filter(Boolean)
+        .join(" "),
       image: data.image_url,
     };
 
     switch (type) {
       case "user.created":
-        await User.create(userData);
-        break;
-
       case "user.updated":
-        await User.findByIdAndUpdate(data.id, userData, { upsert: true });
+        // UPSERT prevents duplicates
+        await User.findByIdAndUpdate(data.id, userData, {
+          upsert: true,
+          new: true,
+        });
         break;
 
       case "user.deleted":
@@ -45,14 +60,18 @@ const clerkWebhooks = async (req, res) => {
         break;
 
       default:
+        console.log("Unhandled webhook type:", type);
         break;
     }
 
-    return res.status(200).json({ success: true, message: "Webhook received" });
-
+    return res.status(200).json({ success: true });
   } catch (error) {
-    console.error("Webhook error:", error.message);
-    return res.status(400).json({ success: false, message: error.message });
+    console.error("❌ Webhook error:", error.message);
+
+    return res.status(400).json({
+      success: false,
+      message: "Webhook verification failed",
+    });
   }
 };
 

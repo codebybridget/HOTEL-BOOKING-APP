@@ -2,90 +2,143 @@ import Booking from "../models/Booking.js";
 import Room from "../models/Room.js";
 import Hotel from "../models/Hotel.js";
 
-// Reusable availability check
+// ==========================
+// Check Availability (Core)
+// ==========================
 export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+
     const bookings = await Booking.find({
       room,
-      checkInDate: { $lte: checkOutDate },
-      checkOutDate: { $gte: checkInDate },
+      checkInDate: { $lte: checkOut },
+      checkOutDate: { $gte: checkIn },
     });
 
     return bookings.length === 0;
   } catch (error) {
     console.error("Availability check failed:", error);
-    return false; // fail-safe: assume unavailable
+    return false;
   }
 };
 
-// API wrapper
+// ==========================
+// API Wrapper
+// ==========================
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, room } = req.body;
 
     if (!checkInDate || !checkOutDate || !room) {
-      return res.status(400).json({ success: false, message: "Missing fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields",
+      });
     }
 
-    const isAvailable = await checkAvailability({ checkInDate, checkOutDate, room });
+    const isAvailable = await checkAvailability({
+      checkInDate,
+      checkOutDate,
+      room,
+    });
 
     res.json({ success: true, isAvailable });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-// Create booking
+// ==========================
+// Create Booking
+// ==========================
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
-    const user = req.auth.userId; // FIXED Clerk user
+    const user = req.auth.userId;
 
     if (!room || !checkInDate || !checkOutDate || !guests) {
-      return res.status(400).json({ success: false, message: "Missing fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing fields",
+      });
     }
 
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
 
     if (checkOut <= checkIn) {
-      return res.status(400).json({ success: false, message: "Invalid date range" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date range",
+      });
     }
 
-    const isAvailable = await checkAvailability({ checkInDate, checkOutDate, room });
+    // Check availability
+    const isAvailable = await checkAvailability({
+      checkInDate,
+      checkOutDate,
+      room,
+    });
 
     if (!isAvailable) {
-      return res.status(400).json({ success: false, message: "Room is not available" });
+      return res.status(400).json({
+        success: false,
+        message: "Room is not available",
+      });
     }
 
+    // Fetch room
     const roomData = await Room.findById(room).populate("hotel");
-    let totalPrice = roomData.pricePerNight;
 
-    const timeDiff = checkOut.getTime() - checkIn.getTime();
-    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    totalPrice *= nights;
+    if (!roomData) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // Calculate nights (minimum 1)
+    const nights = Math.max(
+      1,
+      Math.ceil((checkOut - checkIn) / (1000 * 3600 * 24))
+    );
+
+    const totalPrice = roomData.pricePerNight * nights;
 
     const booking = await Booking.create({
       user,
       room,
       hotel: roomData.hotel._id,
       guests: Number(guests),
-      checkInDate,
-      checkOutDate,
+      checkInDate: checkIn,
+      checkOutDate: checkOut,
       totalPrice,
     });
 
-    res.json({ success: true, message: "Booking created successfully", booking });
+    res.json({
+      success: true,
+      message: "Booking created successfully",
+      booking,
+    });
   } catch (error) {
     console.error("Create booking error:", error);
-    res.status(500).json({ success: false, message: "Failed to create booking" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to create booking",
+    });
   }
 };
 
-// Fetch user bookings
+// ==========================
+// User Bookings
+// ==========================
 export const getUserBookings = async (req, res) => {
   try {
-    const user = req.auth.userId; // FIXED Clerk user
+    const user = req.auth.userId;
 
     const bookings = await Booking.find({ user })
       .populate("room hotel")
@@ -93,36 +146,51 @@ export const getUserBookings = async (req, res) => {
 
     res.json({ success: true, bookings });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch bookings" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch bookings",
+    });
   }
 };
 
-// Hotel owner dashboard bookings
+// ==========================
+// Hotel Dashboard
+// ==========================
 export const getHotelBookings = async (req, res) => {
   try {
     const hotel = await Hotel.findOne({ owner: req.auth.userId });
 
     if (!hotel) {
-      return res.status(404).json({ success: false, message: "No hotel found" });
+      return res.status(404).json({
+        success: false,
+        message: "No hotel found",
+      });
     }
 
     const bookings = await Booking.find({ hotel: hotel._id })
-      .populate("room hotel user")
+      .populate("room hotel")
       .sort({ createdAt: -1 });
 
     const totalBookings = bookings.length;
 
     const totalRevenue = bookings.reduce(
-      (acc, booking) => acc + (booking.totalPrice || 0),
+      (acc, b) => acc + (b.totalPrice || 0),
       0
     );
 
     res.json({
       success: true,
-      dashboardData: { totalBookings, totalRevenue, bookings },
+      dashboardData: {
+        totalBookings,
+        totalRevenue,
+        bookings,
+      },
     });
   } catch (error) {
     console.error("Hotel booking fetch error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch hotel bookings" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch hotel bookings",
+    });
   }
 };

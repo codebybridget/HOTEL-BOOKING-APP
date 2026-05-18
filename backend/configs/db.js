@@ -5,28 +5,27 @@ const connectDB = async () => {
     const mongoURL = process.env.MONGODB_URL;
 
     if (!mongoURL) {
-      throw new Error("MONGODB_URL missing in environment variables");
+      console.error("❌ MONGODB_URL is missing in .env");
+      process.exit(1);
     }
 
-    mongoose.connection.on("connected", () => {
-      console.log("🔥 MongoDB Connected");
-    });
+    // Connect to MongoDB
+    await mongoose.connect(mongoURL);
 
+    console.log("🔥 MongoDB Connected");
+
+    // Events
     mongoose.connection.on("error", (err) => {
-      console.error("❌ MongoDB Connection Error:", err);
+      console.error("❌ MongoDB Error:", err.message);
     });
 
     mongoose.connection.on("disconnected", () => {
       console.warn("⚠️ MongoDB Disconnected");
     });
 
-    await mongoose.connect(mongoURL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
   } catch (error) {
     console.error("❌ Database connection failed:", error.message);
-    process.exit(1); // Stop server if DB fails
+    process.exit(1);
   }
 };
 
