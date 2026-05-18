@@ -1,9 +1,11 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HotelReg from "./components/HotelReg";
+import RoleSelect from "./components/RoleSelect";
 
 import Home from "./pages/Home";
 import Experience from "./pages/Experience";
@@ -21,23 +23,51 @@ import { useAppContext } from "./context/AppContext";
 
 const App = () => {
   const location = useLocation();
-
-  // Check if user is on owner dashboard
   const isOwnerRoute = location.pathname.startsWith("/owner");
 
-  const { showHotelReg } = useAppContext();
+  const {
+    user,
+    axios,
+    navigate,
+    showHotelReg,
+    isOwner,
+    roleLoaded,
+  } = useAppContext();
+
+  const shouldShowRoleSelect = user && roleLoaded && !isOwner;
+
+  const handleRoleSelect = async (role) => {
+    try {
+      const { data } = await axios.post("/api/user/set-role", { role });
+
+      if (data.success) {
+        toast.success("Account type selected");
+
+        if (role === "hotelOwner") {
+          navigate("/owner");
+        } else {
+          navigate("/");
+        }
+
+        window.location.reload();
+      } else {
+        toast.error(data.message || "Failed to select role");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to select account type");
+    }
+  };
 
   return (
     <>
-      {/* Navbar */}
       {!isOwnerRoute && <Navbar />}
 
-      {/* Hotel Registration Modal */}
       {showHotelReg && <HotelReg />}
 
-      {/* Routes */}
+      {shouldShowRoleSelect && <RoleSelect onSelect={handleRoleSelect} />}
+
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/rooms" element={<AllRooms />} />
         <Route path="/rooms/:id" element={<RoomDetails />} />
@@ -45,25 +75,18 @@ const App = () => {
         <Route path="/experience" element={<Experience />} />
         <Route path="/about" element={<About />} />
 
-        {/* Owner Dashboard */}
         <Route path="/owner" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="add-room" element={<AddRoom />} />
           <Route path="list-room" element={<ListRoom />} />
         </Route>
 
-        {/* 404 */}
         <Route
           path="*"
-          element={
-            <h1 className="text-center mt-20 text-2xl">
-              Page Not Found
-            </h1>
-          }
+          element={<h1 className="text-center mt-20 text-2xl">Page Not Found</h1>}
         />
       </Routes>
 
-      {/* Footer */}
       {!isOwnerRoute && <Footer />}
     </>
   );
