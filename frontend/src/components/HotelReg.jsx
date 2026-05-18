@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { useState, useEffect } from "react";
 import { assets, cities } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
@@ -6,37 +7,47 @@ import toast from "react-hot-toast";
 const HotelReg = () => {
   const { setShowHotelReg, axios, setIsOwner, navigate } = useAppContext();
 
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [contact, setContact] = useState("");
-  const [city, setCity] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    contact: "",
+    address: "",
+    city: "",
+  });
+
   const [loading, setLoading] = useState(false);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => (document.body.style.overflow = "auto");
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.id]: e.target.value,
+    }));
+  };
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const baseURL =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      const { data } = await axios.post("/api/hotels", formData);
 
-      const { data } = await axios.post(
-        `${baseURL}/api/hotels`,
-        { name, contact, address, city },
-        { withCredentials: true }
-      );
-
-      if (data.success) {
+      if (data?.success) {
         toast.success(data.message || "Hotel registered successfully!");
         setIsOwner(true);
         setShowHotelReg(false);
         navigate("/owner");
       } else {
-        toast.error(data.message || "Something went wrong.");
+        toast.error(data?.message || "Something went wrong.");
       }
-    } catch (err) {
-      console.error("Registration error:", err);
-      toast.error(err.response?.data?.message || "Failed to register hotel.");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to register hotel."
+      );
     } finally {
       setLoading(false);
     }
@@ -50,98 +61,83 @@ const HotelReg = () => {
       <form
         onSubmit={onSubmitHandler}
         onClick={(e) => e.stopPropagation()}
-        className="flex bg-white rounded-xl max-w-4xl max-md:mx-2"
+        className="flex bg-white rounded-xl max-w-4xl w-full mx-4 overflow-hidden"
       >
+        {/* Image */}
         <img
           src={assets.regImage}
-          alt="Hotel Registration Preview"
-          className="w-1/2 rounded-l-xl hidden md:block"
+          alt="Hotel preview"
+          className="w-1/2 hidden md:block object-cover"
         />
 
-        <div className="relative flex flex-col items-center md:w-1/2 p-8 md:p-10">
-          <img
-            src={assets.closeIcon}
-            alt="Close registration form"
-            className="absolute top-4 right-4 h-4 w-4 cursor-pointer"
+        {/* Form */}
+        <div className="relative flex flex-col w-full md:w-1/2 p-8 md:p-10">
+          {/* Close */}
+          <button
+            type="button"
             onClick={() => setShowHotelReg(false)}
-          />
-          <p className="text-2xl font-semibold mt-6">Register Your Hotel</p>
-
-          <div className="w-full mt-4">
-            <label htmlFor="name" className="font-medium text-gray-500">
-              Hotel Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Type hotel name"
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
+            className="absolute top-4 right-4"
+          >
+            <img
+              src={assets.closeIcon}
+              alt="close"
+              className="h-4 w-4"
             />
-          </div>
+          </button>
 
+          <h2 className="text-2xl font-semibold mt-6">
+            Register Your Hotel
+          </h2>
+
+          {/* Inputs */}
+          {[
+            { id: "name", label: "Hotel Name", type: "text" },
+            { id: "contact", label: "Phone", type: "tel" },
+            { id: "address", label: "Address", type: "text" },
+          ].map((field) => (
+            <div key={field.id} className="w-full mt-4">
+              <label className="text-gray-500 text-sm">
+                {field.label}
+              </label>
+              <input
+                id={field.id}
+                type={field.type}
+                value={formData[field.id]}
+                onChange={handleChange}
+                required
+                className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500"
+              />
+            </div>
+          ))}
+
+          {/* City */}
           <div className="w-full mt-4">
-            <label htmlFor="contact" className="font-medium text-gray-500">
-              Phone
-            </label>
-            <input
-              id="contact"
-              type="tel"
-              pattern="[0-9]{7,15}"
-              title="Enter a valid phone number (7–15 digits)"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder="Enter phone number"
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            />
-          </div>
-
-          <div className="w-full mt-4">
-            <label htmlFor="address" className="font-medium text-gray-500">
-              Address
-            </label>
-            <input
-              id="address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter street address"
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            />
-          </div>
-
-          <div className="w-full mt-4 max-w-60 mr-auto">
-            <label htmlFor="city" className="font-medium text-gray-500">
-              City
-            </label>
+            <label className="text-gray-500 text-sm">City</label>
             <select
               id="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
+              value={formData.city}
+              onChange={handleChange}
               required
+              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500"
             >
               <option value="">Select City</option>
-              {cities.map((city) => (
-                <option key={city} value={city}>
-                  {city}
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className={`${
+            className={`mt-6 px-6 py-2 rounded text-white transition ${
               loading
                 ? "bg-indigo-400 cursor-not-allowed"
                 : "bg-indigo-500 hover:bg-indigo-600"
-            } transition-all text-white mr-auto px-6 py-2 rounded mt-6 flex items-center gap-2`}
+            }`}
           >
             {loading ? "Registering..." : "Register"}
           </button>

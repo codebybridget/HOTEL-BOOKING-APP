@@ -1,170 +1,210 @@
-import React, { useState } from 'react'
-import { assets, facilityIcons, roomsDummyData } from '../assets/assets'
-import { useNavigate } from 'react-router-dom'
-import StarRating from '../components/StarRating'
+import React from "react";
+import { useState, useEffect } from "react";
+import { assets, facilityIcons } from "../assets/assets";
+import { useNavigate } from "react-router-dom";
+import StarRating from "../components/StarRating";
+import { useAppContext } from "../context/AppContext";
 
-const CheckBox = ({ label, selected = false, onChange = () => {} }) => {
-  return (
-    <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
-      <input
-        type="checkbox"
-        checked={selected}
-        onChange={(e) => onChange(e.target.checked, label)}
-      />
-      <span className="font-light select-none">{label}</span>
-    </label>
-  )
-}
+// Checkbox
+const CheckBox = ({ label, selected, onChange }) => (
+  <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
+    <input
+      type="checkbox"
+      checked={selected}
+      onChange={(e) => onChange(label, e.target.checked)}
+    />
+    <span className="font-light select-none">{label}</span>
+  </label>
+);
 
-const RadioButton = ({ label, selected = false, onChange = () => {} }) => {
-  return (
-    <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
-      <input
-        type="radio"
-        name="sortOption"
-        checked={selected}
-        onChange={() => onChange(label)}
-      />
-      <span className="font-light select-none">{label}</span>
-    </label>
-  )
-}
+// Radio
+const RadioButton = ({ label, selected, onChange }) => (
+  <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
+    <input
+      type="radio"
+      name="sortOption"
+      checked={selected}
+      onChange={() => onChange(label)}
+    />
+    <span className="font-light select-none">{label}</span>
+  </label>
+);
 
 const AllRooms = () => {
-  const navigate = useNavigate()
-  const [openFilters, setOpenFilters] = useState(false)
+  const navigate = useNavigate();
+  const { axios } = useAppContext();
 
-  const roomTypes = ['Single Bed', 'Double Bed', 'Luxury Room', 'Family Suite']
+  const [openFilters, setOpenFilters] = useState(false);
 
-  const priceRanges = ['0 to 500', '500 to 1000', '1000 to 2000', '2000 to 3000']
+  // 🔥 NEW STATE
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const sortOptions = ['price low to High', 'price High to low', 'Newest First']
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedPrices, setSelectedPrices] = useState([]);
+  const [sortOption, setSortOption] = useState("");
+
+  const roomTypes = ["Single Bed", "Double Bed", "Luxury Room", "Family Suite"];
+  const priceRanges = ["0 to 500", "500 to 1000", "1000 to 2000", "2000 to 3000"];
+  const sortOptions = ["price low to High", "price High to low", "Newest First"];
+
+  const handleNavigate = (id) => {
+    navigate(`/rooms/${id}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // =========================
+  // FETCH ROOMS FROM BACKEND
+  // =========================
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const { data } = await axios.get("/api/rooms");
+
+        if (data.success) {
+          setRooms(data.rooms);
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
+  const toggleType = (label, checked) => {
+    setSelectedTypes((prev) =>
+      checked ? [...prev, label] : prev.filter((item) => item !== label)
+    );
+  };
+
+  const togglePrice = (label, checked) => {
+    setSelectedPrices((prev) =>
+      checked ? [...prev, label] : prev.filter((item) => item !== label)
+    );
+  };
 
   return (
     <div className="flex flex-col pt-28 md:pt-36 px-4 md:px-16 lg:px-24 xl:px-32 w-full">
       {/* Header */}
-      <div className="flex flex-col items-start text-left mb-12">
-        <h1 className="font-playfair text-4xl md:text-[40px]">Hotel Rooms</h1>
-        <p className="text-sm md:text-base text-gray-500/90 mt-2 max-w-[600px]">
-          Take advantage of our limited-time offers and special packages to
-          enhance your stay and create unforgettable memories.
+      <div className="mb-12">
+        <h1 className="font-playfair text-3xl md:text-[40px] text-gray-800">
+          Hotel Rooms
+        </h1>
+        <p className="text-sm md:text-base text-gray-500 mt-2 max-w-xl">
+          Explore available rooms and book your perfect stay.
         </p>
       </div>
 
-      {/* Main content: filters (top on mobile) + rooms (left/right on desktop) */}
-      <div className="flex flex-col lg:flex-row gap-8 w-full">
-        {/* Filters - top on mobile, right on desktop */}
-        <div className="order-1 lg:order-2 bg-white w-full lg:w-80 border border-gray-300 text-gray-600">
-          <div
-            className={`flex items-center justify-between px-5 py-2.5 border-gray-300 ${
-              openFilters && 'border-b'
-            }`}
-          >
-            <p className="text-base font-medium text-gray-800">FILTERS</p>
-            <div className="text-xs cursor-pointer">
-              <span
-                onClick={() => setOpenFilters(!openFilters)}
-                className="lg:hidden"
-              >
-                {openFilters ? 'HIDE' : 'SHOW'}
-              </span>
-              <span className="hidden lg:block">CLEAR</span>
-            </div>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Filters */}
+        <div className="order-1 lg:order-2 w-full lg:w-80 border rounded-lg">
+          <div className="flex justify-between px-5 py-3 border-b">
+            <p className="font-medium">FILTERS</p>
+            <span
+              onClick={() => setOpenFilters(!openFilters)}
+              className="text-xs cursor-pointer lg:hidden"
+            >
+              {openFilters ? "HIDE" : "SHOW"}
+            </span>
           </div>
 
-          <div
-            className={`${
-              openFilters ? 'h-auto' : 'h-0 lg:h-auto'
-            } overflow-hidden transition-all duration-700`}
-          >
-            {/* Popular filters */}
-            <div className="px-5 pt-5">
-              <p className="font-medium text-gray-800 pb-2">Popular filters</p>
-              {roomTypes.map((room, index) => (
-                <CheckBox key={index} label={room} />
-              ))}
-            </div>
+          <div className={`${openFilters ? "block" : "hidden"} lg:block p-5`}>
+            <p className="font-medium mb-2">Room Type</p>
+            {roomTypes.map((item) => (
+              <CheckBox
+                key={item}
+                label={item}
+                selected={selectedTypes.includes(item)}
+                onChange={toggleType}
+              />
+            ))}
 
-            {/* Price range */}
-            <div className="px-5 pt-5">
-              <p className="font-medium text-gray-800 pb-2">Price Range</p>
-              {priceRanges.map((range, index) => (
-                <CheckBox key={index} label={`$ ${range}`} />
-              ))}
-            </div>
+            <p className="font-medium mt-5 mb-2">Price Range</p>
+            {priceRanges.map((item) => (
+              <CheckBox
+                key={item}
+                label={item}
+                selected={selectedPrices.includes(item)}
+                onChange={togglePrice}
+              />
+            ))}
 
-            {/* Sort options */}
-            <div className="px-5 pt-5">
-              <p className="font-medium text-gray-800 pb-2">Sort By</p>
-              {sortOptions.map((option, index) => (
-                <RadioButton key={index} label={option} />
-              ))}
-            </div>
+            <p className="font-medium mt-5 mb-2">Sort By</p>
+            {sortOptions.map((item) => (
+              <RadioButton
+                key={item}
+                label={item}
+                selected={sortOption === item}
+                onChange={setSortOption}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Rooms list - below filters on mobile, left on desktop */}
-        <div className="order-2 lg:order-1 flex flex-col gap-8 w-full lg:w-3/4">
-          {roomsDummyData.map((room) => (
-            <div
-              key={room._id}
-              className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:pb-10 last:border-0"
-            >
-              <img
-                onClick={() => {
-                  navigate(`/rooms/${room._id}`)
-                  scrollTo(0, 0)
-                }}
-                src={room.images[0]}
-                alt="hotel-img"
-                title="view Room Details"
-                className="max-w-h-65 md:w-1/2 rounded-xl shadow-lg object-cover cursor-pointer"
-              />
+        {/* Rooms */}
+        <div className="order-2 lg:order-1 flex flex-col gap-8 w-full">
+          {loading ? (
+            <p>Loading rooms...</p>
+          ) : rooms.length === 0 ? (
+            <p>No rooms available</p>
+          ) : (
+            rooms.map((room) => (
+              <div
+                key={room._id}
+                className="flex flex-col md:flex-row gap-6 border-b pb-8"
+              >
+                <img
+                  src={room?.images?.[0]}
+                  alt={room?.hotel?.name}
+                  onClick={() => handleNavigate(room._id)}
+                  className="md:w-1/2 h-60 object-cover rounded-xl cursor-pointer"
+                />
 
-              <div className="md:w-1/2 flex flex-col gap-2">
-                <p className="text-gray-500">{room.hotel.city}</p>
-                <p
-                  onClick={() => {
-                    navigate(`/rooms/${room._id}`)
-                    scrollTo(0, 0)
-                  }}
-                  className="text-gray-800 text-3xl font-playfair cursor-pointer"
-                >
-                  {room.hotel.name}
-                </p>
-                <div className="flex items-center">
-                  <StarRating />
-                  <p className="ml-2">200+ reviews</p>
+                <div className="md:w-1/2 flex flex-col gap-2">
+                  <p className="text-gray-500 text-sm">
+                    {room?.hotel?.city}
+                  </p>
+
+                  <h2
+                    onClick={() => handleNavigate(room._id)}
+                    className="text-2xl font-playfair cursor-pointer"
+                  >
+                    {room?.hotel?.name}
+                  </h2>
+
+                  <div className="flex items-center">
+                    <StarRating />
+                    <p className="ml-2 text-sm text-gray-500">Reviews</p>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
+                    <img src={assets.locationIcon} className="w-4" />
+                    <span>{room?.hotel?.address}</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 mt-3">
+                    {room?.amenities?.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                        <img src={facilityIcons[item]} className="w-4 h-4" />
+                        <span className="text-xs">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-lg font-semibold text-gray-800 mt-3">
+                    ${room?.pricePerNight} / night
+                  </p>
                 </div>
-                <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
-                  <img src={assets.locationIcon} alt="location-Icon" />
-                  <span>{room.hotel.address}</span>
-                </div>
-                <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-                  {room.amenities.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
-                    >
-                      <img
-                        src={facilityIcons[item]}
-                        alt={item}
-                        className="w-5 h-5"
-                      />
-                      <p className="text-xs">{item}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xl font-medium text-gray-700">
-                  ${room.pricePerNight} /night
-                </p>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AllRooms
+export default AllRooms;

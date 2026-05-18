@@ -75,11 +75,11 @@ export const assets = {
 }
 
 export const cities = [
-    "Dubai",
-    "Singapore",
-    "New York",
-    "London",
-    "Nigeria",
+    "Kano",
+    "Jos",
+    "Abuja",
+    "Lagos",
+    "Kaduna",
 ];
 
 // Exclusive Offers Dummy Data
@@ -124,7 +124,7 @@ export const userDummyData = {
     "updatedAt": "2025-04-10T06:34:48.719Z",
     "__v": 1,
     "recentSearchedCities": [
-        "New York"
+        "Kano"
     ]
 }
 
@@ -135,7 +135,7 @@ export const hotelDummyData = {
     "address": "Main Road  123 Street , 23 Colony",
     "contact": "+0123456789",
     "owner": userDummyData,
-    "city": "New York",
+    "city": "Kano",
     "createdAt": "2025-04-10T06:22:11.663Z",
     "updatedAt": "2025-04-10T06:22:11.663Z",
     "__v": 0

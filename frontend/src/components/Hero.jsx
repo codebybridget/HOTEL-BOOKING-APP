@@ -2,38 +2,41 @@ import React from "react";
 import { assets, cities } from "../assets/assets";
 
 const Hero = () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // later: connect to search logic / API
+  };
+
   return (
     <div
-      className="flex flex-col items-start justify-center px-6 md:px-16
-      lg:px-24 xl:px-32 text-white 
-      bg-[url('/heroImage.png')] bg-no-repeat bg-cover bg-center min-h-screen"
+      className="flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: `url(${assets.heroImage})` }}
     >
-      <p className="bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20">
+      <p className="bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20 text-sm">
         The Ultimate Hotel Experience
       </p>
 
-      <h1
-        className="font-playfair text-2xl md:text-5xl md:text-[56px] md:leading-[56px] 
-        font-bold md:font-extrabold max-w-xl mt-4"
-      >
+      <h1 className="font-playfair text-2xl md:text-[56px] md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-4">
         Discover Your Perfect Getaway Destination
       </h1>
 
-      <p className="max-w-[530px] mt-2 text-sm md:text-base">
+      <p className="max-w-[530px] mt-3 text-sm md:text-base leading-relaxed">
         Unparalleled luxury and comfort await at the world's most exclusive
         hotels and resorts. Start your journey today.
       </p>
 
       <form
-        className="bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto"
+        onSubmit={handleSubmit}
+        className="bg-white text-gray-600 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row gap-4 w-full md:w-auto"
       >
         {/* Destination */}
         <div>
           <div className="flex items-center gap-2">
             <img
               src={assets.calenderIcon}
-              alt=""
-              aria-hidden="true"
+              alt="destination icon"
               className="h-4"
             />
             <label htmlFor="destinationInput">Destination</label>
@@ -43,10 +46,9 @@ const Hero = () => {
             list="destinations"
             id="destinationInput"
             type="text"
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5
-              text-sm outline-none"
-            placeholder="Type here"
             required
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
+            placeholder="Type here"
           />
 
           <datalist id="destinations">
@@ -61,16 +63,17 @@ const Hero = () => {
           <div className="flex items-center gap-2">
             <img
               src={assets.calenderIcon}
-              alt=""
-              aria-hidden="true"
+              alt="calendar icon"
               className="h-4"
             />
             <label htmlFor="checkIn">Check in</label>
           </div>
+
           <input
             id="checkIn"
             type="date"
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+            min={today}
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
           />
         </div>
 
@@ -79,39 +82,44 @@ const Hero = () => {
           <div className="flex items-center gap-2">
             <img
               src={assets.calenderIcon}
-              alt=""
-              aria-hidden="true"
+              alt="calendar icon"
               className="h-4"
             />
             <label htmlFor="checkOut">Check out</label>
           </div>
+
           <input
             id="checkOut"
             type="date"
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none"
+            min={today}
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
           />
         </div>
 
         {/* Guests */}
-        <div className="flex md:flex-col max-md:gap-2 max-md:items-center">
+        <div className="flex md:flex-col gap-2 md:gap-0">
           <label htmlFor="guests">Guests</label>
           <input
-            min={1}
-            max={4}
             id="guests"
             type="number"
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none max-w-16"
-            placeholder="1"
+            min={1}
+            max={4}
+            defaultValue={1}
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none max-w-20"
           />
         </div>
 
-        {/* Search Button */}
+        {/* Button */}
         <button
           type="submit"
-          className="flex items-center justify-center gap-1 rounded-md bg-black py-3 px-4 text-white my-auto cursor-pointer max-md:w-full max-md:py-1"
+          className="flex items-center justify-center gap-2 rounded-md bg-black py-3 px-5 text-white cursor-pointer md:mt-6"
         >
-          <img src={assets.searchIcon} alt="" aria-hidden="true" className="h-7" />
-          <span>Search</span>
+          <img
+            src={assets.searchIcon}
+            alt="search"
+            className="h-5 invert"
+          />
+          Search
         </button>
       </form>
     </div>

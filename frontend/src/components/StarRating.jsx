@@ -1,18 +1,31 @@
 import React from "react";
 import { assets } from "../assets/assets";
 
-const StarRating = ({ rating = 4 }) => {
+const StarRating = ({ rating = 4, size = 18 }) => {
+  const totalStars = 5;
+
   return (
-    <div aria-label={`Rating: ${rating} out of 5`} className="flex">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <img
-          key={index}
-          src={rating > index ? assets.starIconFilled : assets.starIconOutlined}
-          alt=""
-          aria-hidden="true"
-          className="w-[18px] h-[18px]"  // or w-5 h-5
-        />
-      ))}
+    <div
+      className="flex items-center"
+      aria-label={`Rating: ${rating} out of ${totalStars}`}
+    >
+      {Array.from({ length: totalStars }).map((_, index) => {
+        const isFilled = index < Math.floor(rating);
+
+        return (
+          <img
+            key={index}
+            src={
+              isFilled
+                ? assets.starIconFilled
+                : assets.starIconOutlined
+            }
+            alt=""
+            aria-hidden="true"
+            style={{ width: size, height: size }}
+          />
+        );
+      })}
     </div>
   );
 };
