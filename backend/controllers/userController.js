@@ -1,6 +1,5 @@
 import User from "../models/User.js";
 
-// Get user data
 export const getUserData = async (req, res) => {
   try {
     const userId = req.auth.userId;
@@ -21,7 +20,6 @@ export const getUserData = async (req, res) => {
   }
 };
 
-// Set user role
 export const setUserRole = async (req, res) => {
   try {
     const userId = req.auth.userId;
@@ -36,16 +34,23 @@ export const setUserRole = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { role },
-      { new: true }
+      {
+        $set: {
+          role,
+        },
+        $setOnInsert: {
+          _id: userId,
+          username: "Guest",
+          email: `${userId}@clerk.local`,
+          image: "",
+          recentSearchedCities: [],
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
     );
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found. Clerk webhook has not created this user yet.",
-      });
-    }
 
     res.json({
       success: true,

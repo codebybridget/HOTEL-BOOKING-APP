@@ -1,39 +1,14 @@
-import User from "../models/User.js";
+import express from "express";
+import { requireAuth } from "@clerk/express";
+import {
+  getUserData,
+  setUserRole,
+} from "../controllers/userController.js";
 
-export const protect = async (req, res, next) => {
-  try {
-    const userId = req.auth?.userId;
+const userRouter = express.Router();
 
-    // Clerk already ensures auth, but keep safety
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+userRouter.get("/", requireAuth(), getUserData);
 
-    // Fetch user (lightweight)
-    const user = await User.findById(userId).select(
-      "_id role email username"
-    );
+userRouter.post("/set-role", requireAuth(), setUserRole);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Attach user to request
-    req.user = user;
-
-    next();
-  } catch (error) {
-    console.error("Protect middleware error:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error in auth middleware",
-    });
-  }
-};
+export default userRouter;
