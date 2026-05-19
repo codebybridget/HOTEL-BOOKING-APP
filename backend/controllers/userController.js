@@ -3,16 +3,16 @@ import User from "../models/User.js";
 // GET USER DATA
 export const getUserData = async (req, res) => {
   try {
-    const userId = req.auth?.userId;
+    const clerkId = req.auth?.userId;
 
-    if (!userId) {
+    if (!clerkId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    const user = await User.findById(userId).lean();
+    const user = await User.findOne({ clerkId }).lean();
 
     return res.json({
       success: true,
@@ -34,10 +34,10 @@ export const getUserData = async (req, res) => {
 // SET USER ROLE
 export const setUserRole = async (req, res) => {
   try {
-    const userId = req.auth?.userId;
+    const clerkId = req.auth?.userId;
     const { role } = req.body;
 
-    if (!userId) {
+    if (!clerkId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
@@ -53,17 +53,14 @@ export const setUserRole = async (req, res) => {
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
+    const user = await User.findOneAndUpdate(
+      { clerkId },
       {
-        $set: {
-          role,
-        },
-
+        $set: { role },
         $setOnInsert: {
-          _id: userId,
+          clerkId,
           username: "Guest",
-          email: `${userId}@clerk.local`,
+          email: `${clerkId}@clerk.local`,
           image: "",
           recentSearchedCities: [],
         },

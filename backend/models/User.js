@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    // Clerk User ID
+    // Clerk User ID stored as MongoDB _id
     _id: {
       type: String,
       required: true,
@@ -52,7 +52,6 @@ const userSchema = new mongoose.Schema(
 );
 
 // INDEXES
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 
 // HOOKS
@@ -64,9 +63,7 @@ userSchema.pre("save", function (next) {
   if (this.recentSearchedCities?.length) {
     this.recentSearchedCities = [
       ...new Set(
-        this.recentSearchedCities.map((city) =>
-          city.trim().toLowerCase()
-        )
+        this.recentSearchedCities.map((city) => city.trim().toLowerCase())
       ),
     ];
   }
@@ -74,7 +71,6 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-const User =
-  mongoose.models.User || mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;

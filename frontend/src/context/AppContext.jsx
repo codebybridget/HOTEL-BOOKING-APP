@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -53,7 +54,7 @@ export const AppProvider = ({ children }) => {
     };
   }, [getToken]);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       setRoleLoaded(false);
 
@@ -79,7 +80,7 @@ export const AppProvider = ({ children }) => {
     } finally {
       setRoleLoaded(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -91,7 +92,7 @@ export const AppProvider = ({ children }) => {
       setSearchedCities([]);
       setRoleLoaded(true);
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, user, fetchUser]);
 
   const value = useMemo(
     () => ({
@@ -118,6 +119,7 @@ export const AppProvider = ({ children }) => {
       roleLoaded,
       showHotelReg,
       searchedCities,
+      fetchUser,
     ]
   );
 
