@@ -54,8 +54,8 @@ const App = () => {
         toast.error(data.message || "Failed to select role");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to select account type");
+      console.error("set role error:",error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to select account type");
     }
   };
 

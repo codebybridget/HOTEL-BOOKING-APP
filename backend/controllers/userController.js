@@ -3,14 +3,24 @@ import User from "../models/User.js";
 // Get user data
 export const getUserData = async (req, res) => {
   try {
-    const user = await User.findById(req.auth.userId);
+    const clerkId = req.auth.userId;
+
+    const user = await User.findOne({ clerkId });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.json({
       success: true,
-      role: user?.role || null, // ✅ IMPORTANT
-      recentSearchedCities: user?.recentSearchedCities || [],
+      role: user.role || null,
+      recentSearchedCities: user.recentSearchedCities || [],
     });
   } catch (error) {
+    console.error("Get user error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -18,7 +28,7 @@ export const getUserData = async (req, res) => {
 // Set user role
 export const setUserRole = async (req, res) => {
   try {
-    const userId = req.auth.userId;
+    const clerkId = req.auth.userId;
     const { role } = req.body;
 
     if (!["user", "hotelOwner"].includes(role)) {
@@ -28,10 +38,26 @@ export const setUserRole = async (req, res) => {
       });
     }
 
-    await User.findByIdAndUpdate(userId, { role });
+    const user = await User.findOneAndUpdate(
+      { clerkId },
+      { role },
+      { new: true }
+    );
 
-    res.json({ success: true, message: "Role updated" });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Role updated",
+      role: user.role,
+    });
   } catch (error) {
+    console.error("Set role error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
