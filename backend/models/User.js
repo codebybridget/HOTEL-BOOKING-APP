@@ -18,10 +18,10 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: true,
       lowercase: true,
       trim: true,
       unique: true,
+      sparse: true,
     },
 
     image: {
@@ -51,10 +51,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// INDEXES
 userSchema.index({ role: 1 });
 
-// HOOKS
 userSchema.pre("save", function (next) {
   if (!this.username || this.username.trim() === "") {
     this.username = "Guest";
