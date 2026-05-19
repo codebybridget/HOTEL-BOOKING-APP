@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
 import { toast } from "react-hot-toast";
+import { useAppContext } from "../../context/AppContext";
 
 const AddRoom = () => {
+  const { axios } = useAppContext();
+
   const [images, setImages] = useState({
     1: null,
     2: null,
@@ -25,7 +28,6 @@ const AddRoom = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ FIXED FUNCTION
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -44,24 +46,16 @@ const AddRoom = () => {
       formData.append("amenities", JSON.stringify(amenitiesArray));
 
       Object.values(images).forEach((file) => {
-        if (file) formData.append("images", file);
+        if (file) {
+          formData.append("images", file);
+        }
       });
 
-      // ✅ WORKING REQUEST
-      const response = await fetch(
-        "https://hotel-booking-app-backend-90js.onrender.com/api/room",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
+      const { data } = await axios.post("/api/rooms", formData);
 
       if (data.success) {
         toast.success("Room added successfully!");
 
-        // ✅ RESET INSIDE FUNCTION
         setInputs({
           roomType: "",
           pricePerNight: "",
@@ -84,8 +78,8 @@ const AddRoom = () => {
         toast.error(data.message || "Something went wrong");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Upload failed");
+      console.error("Add room error:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Upload failed");
     } finally {
       setLoading(false);
     }
@@ -101,8 +95,8 @@ const AddRoom = () => {
           subTitle="Fill in the details carefully and accurately."
         />
 
-        {/* Images */}
         <p className="text-gray-800 mt-10">Images</p>
+
         <div className="grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap">
           {Object.keys(images).map((key) => (
             <label key={key}>
@@ -115,6 +109,7 @@ const AddRoom = () => {
                 }
                 alt="upload"
               />
+
               <input
                 type="file"
                 hidden
@@ -130,10 +125,10 @@ const AddRoom = () => {
           ))}
         </div>
 
-        {/* Room Type */}
         <div className="flex gap-4 mt-4">
           <div>
             <p>Room Type</p>
+
             <select
               value={inputs.roomType}
               onChange={(e) =>
@@ -152,6 +147,7 @@ const AddRoom = () => {
 
           <div>
             <p>Price / night</p>
+
             <input
               type="number"
               value={inputs.pricePerNight}
@@ -167,10 +163,10 @@ const AddRoom = () => {
           </div>
         </div>
 
-        {/* Amenities */}
         <p className="mt-4">Amenities</p>
-        {Object.keys(inputs.amenities).map((amenity, index) => (
-          <div key={index}>
+
+        {Object.keys(inputs.amenities).map((amenity) => (
+          <div key={amenity}>
             <input
               type="checkbox"
               checked={inputs.amenities[amenity]}
@@ -184,6 +180,7 @@ const AddRoom = () => {
                 })
               }
             />
+
             <label className="ml-2">{amenity}</label>
           </div>
         ))}
@@ -191,7 +188,7 @@ const AddRoom = () => {
         <button
           type="submit"
           disabled={loading}
-          className="bg-black text-white px-6 py-2 mt-6 rounded"
+          className="bg-black text-white px-6 py-2 mt-6 rounded disabled:opacity-50"
         >
           {loading ? "Adding..." : "Add Room"}
         </button>

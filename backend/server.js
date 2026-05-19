@@ -14,60 +14,112 @@ import clerkWebhooks from "./controllers/clerkWebhooks.js";
 
 dotenv.config();
 
+// Connect services
 connectDB();
 connectCloudinary();
 
 const app = express();
 
+/* =========================
+   CORS
+========================= */
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://hotel-booking-app-frontend-rxdr.onrender.com",
+];
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, mobile apps, etc.)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
-// Clerk webhook must use raw body before express.json()
+/* =========================
+   WEBHOOKS
+========================= */
+
+// Clerk webhook must use RAW body
 app.use(
   "/api/clerk",
   express.raw({ type: "application/json" }),
   clerkWebhooks
 );
 
+/* =========================
+   MIDDLEWARE
+========================= */
+
 app.use(express.json());
+
 app.use(clerkMiddleware());
 
-// Public routes
+/* =========================
+   ROUTES
+========================= */
+
+// Health check
 app.get("/", (req, res) => {
-  res.json({ message: "API is running" });
+  res.json({
+    success: true,
+    message: "API is running",
+  });
 });
 
+// Public routes
 app.use("/api/user", userRouter);
+
 app.use("/api/rooms", roomRouter);
 
 // Protected routes
 app.use("/api/hotels", requireAuth(), hotelRouter);
+
 app.use("/api/bookings", requireAuth(), bookingRouter);
 
+// Protected test route
 app.get("/api/protected", requireAuth(), (req, res) => {
   res.json({
+    success: true,
     message: "Authenticated",
     userId: req.auth.userId,
   });
 });
 
-// 404 handler
+/* =========================
+   404 HANDLER
+========================= */
+
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
-// Global error handler
+/* =========================
+   GLOBAL ERROR HANDLER
+========================= */
+
 app.use((err, req, res, next) => {
-  console.error("❌ ERROR:", err.message);
+  console.error("❌ ERROR:", err);
 
   res.status(err.status || 500).json({
+    success: false,
     message: err.message || "Server error",
   });
 });
+
+/* =========================
+   SERVER
+========================= */
 
 const PORT = process.env.PORT || 3000;
 
