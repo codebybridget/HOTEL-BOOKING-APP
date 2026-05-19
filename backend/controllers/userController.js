@@ -7,21 +7,17 @@ export const getUserData = async (req, res) => {
 
     const user = await User.findOne({ clerkId });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
     res.json({
       success: true,
-      role: user.role || null,
-      recentSearchedCities: user.recentSearchedCities || [],
+      role: user?.role || null,
+      recentSearchedCities: user?.recentSearchedCities || [],
     });
   } catch (error) {
     console.error("Get user error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -40,16 +36,17 @@ export const setUserRole = async (req, res) => {
 
     const user = await User.findOneAndUpdate(
       { clerkId },
-      { role },
-      { new: true }
+      {
+        $set: {
+          clerkId,
+          role,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
     );
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
 
     res.json({
       success: true,
@@ -58,6 +55,9 @@ export const setUserRole = async (req, res) => {
     });
   } catch (error) {
     console.error("Set role error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
