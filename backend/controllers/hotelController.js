@@ -2,7 +2,6 @@ import Hotel from "../models/Hotel.js";
 
 export const registerHotel = async (req, res) => {
   try {
-    // Clerk Auth
     const ownerId = req.auth?.userId;
 
     if (!ownerId) {
@@ -14,7 +13,6 @@ export const registerHotel = async (req, res) => {
 
     let { name, address, contact, city } = req.body;
 
-    // Validation
     if (!name || !address || !contact || !city) {
       return res.status(400).json({
         success: false,
@@ -22,15 +20,11 @@ export const registerHotel = async (req, res) => {
       });
     }
 
-    // Sanitize Inputs
     name = name.trim();
     address = address.trim();
     contact = contact.trim();
-    city =
-      city.trim().charAt(0).toUpperCase() +
-      city.trim().slice(1).toLowerCase();
+    city = city.trim().toLowerCase();
 
-    // Optional Contact Validation
     if (contact.length < 7) {
       return res.status(400).json({
         success: false,
@@ -38,20 +32,18 @@ export const registerHotel = async (req, res) => {
       });
     }
 
-    // Check Existing Hotel
     const existingHotel = await Hotel.findOne({
       owner: ownerId,
     });
 
     if (existingHotel) {
-      return res.status(409).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "Hotel already registered",
         hotel: existingHotel,
       });
     }
 
-    // Create Hotel
     const hotel = await Hotel.create({
       owner: ownerId,
       name,
