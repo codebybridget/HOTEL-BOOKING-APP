@@ -3,9 +3,9 @@ import User from "../models/User.js";
 // Get user data
 export const getUserData = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const userId = req.auth.userId;
 
-    const user = await User.findOne({ clerkId });
+    const user = await User.findById(userId);
 
     res.json({
       success: true,
@@ -24,7 +24,7 @@ export const getUserData = async (req, res) => {
 // Set user role
 export const setUserRole = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const userId = req.auth.userId;
     const { role } = req.body;
 
     if (!["user", "hotelOwner"].includes(role)) {
@@ -34,19 +34,18 @@ export const setUserRole = async (req, res) => {
       });
     }
 
-    const user = await User.findOneAndUpdate(
-      { clerkId },
-      {
-        $set: {
-          clerkId,
-          role,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-      }
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
     );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Clerk webhook has not created this user yet.",
+      });
+    }
 
     res.json({
       success: true,
