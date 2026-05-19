@@ -1,11 +1,10 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { assets, cities } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
 const HotelReg = () => {
-  const { setShowHotelReg, axios, setIsOwner, navigate } = useAppContext();
+  const { setShowHotelReg, axios, navigate } = useAppContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -16,10 +15,12 @@ const HotelReg = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // Prevent background scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => (document.body.style.overflow = "auto");
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -38,13 +39,15 @@ const HotelReg = () => {
 
       if (data?.success) {
         toast.success(data.message || "Hotel registered successfully!");
-        setIsOwner(true);
         setShowHotelReg(false);
         navigate("/owner");
+        window.location.reload();
       } else {
         toast.error(data?.message || "Something went wrong.");
       }
     } catch (error) {
+      console.error("Hotel registration error:", error.response?.data || error.message);
+
       toast.error(
         error?.response?.data?.message || "Failed to register hotel."
       );
@@ -63,33 +66,25 @@ const HotelReg = () => {
         onClick={(e) => e.stopPropagation()}
         className="flex bg-white rounded-xl max-w-4xl w-full mx-4 overflow-hidden"
       >
-        {/* Image */}
         <img
           src={assets.regImage}
           alt="Hotel preview"
           className="w-1/2 hidden md:block object-cover"
         />
 
-        {/* Form */}
         <div className="relative flex flex-col w-full md:w-1/2 p-8 md:p-10">
-          {/* Close */}
           <button
             type="button"
             onClick={() => setShowHotelReg(false)}
             className="absolute top-4 right-4"
           >
-            <img
-              src={assets.closeIcon}
-              alt="close"
-              className="h-4 w-4"
-            />
+            <img src={assets.closeIcon} alt="close" className="h-4 w-4" />
           </button>
 
           <h2 className="text-2xl font-semibold mt-6">
             Register Your Hotel
           </h2>
 
-          {/* Inputs */}
           {[
             { id: "name", label: "Hotel Name", type: "text" },
             { id: "contact", label: "Phone", type: "tel" },
@@ -99,6 +94,7 @@ const HotelReg = () => {
               <label className="text-gray-500 text-sm">
                 {field.label}
               </label>
+
               <input
                 id={field.id}
                 type={field.type}
@@ -110,9 +106,9 @@ const HotelReg = () => {
             </div>
           ))}
 
-          {/* City */}
           <div className="w-full mt-4">
             <label className="text-gray-500 text-sm">City</label>
+
             <select
               id="city"
               value={formData.city}
@@ -121,15 +117,14 @@ const HotelReg = () => {
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500"
             >
               <option value="">Select City</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
