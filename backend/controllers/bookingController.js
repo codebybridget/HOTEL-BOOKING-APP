@@ -2,9 +2,7 @@ import Booking from "../models/Booking.js";
 import Room from "../models/Room.js";
 import Hotel from "../models/Hotel.js";
 
-// ==========================
-// Check Availability (Core)
-// ==========================
+// Check Availability
 export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
     const checkIn = new Date(checkInDate);
@@ -23,9 +21,7 @@ export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => 
   }
 };
 
-// ==========================
-// API Wrapper
-// ==========================
+// Check Availability API
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, room } = req.body;
@@ -52,9 +48,7 @@ export const checkAvailabilityAPI = async (req, res) => {
   }
 };
 
-// ==========================
 // Create Booking
-// ==========================
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
@@ -77,7 +71,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Check availability
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
@@ -91,7 +84,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Fetch room
     const roomData = await Room.findById(room).populate("hotel");
 
     if (!roomData) {
@@ -101,7 +93,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Calculate nights (minimum 1)
     const nights = Math.max(
       1,
       Math.ceil((checkOut - checkIn) / (1000 * 3600 * 24))
@@ -133,9 +124,7 @@ export const createBooking = async (req, res) => {
   }
 };
 
-// ==========================
 // User Bookings
-// ==========================
 export const getUserBookings = async (req, res) => {
   try {
     const user = req.auth.userId;
@@ -146,6 +135,8 @@ export const getUserBookings = async (req, res) => {
 
     res.json({ success: true, bookings });
   } catch (error) {
+    console.error("User bookings fetch error:", error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch bookings",
@@ -153,17 +144,19 @@ export const getUserBookings = async (req, res) => {
   }
 };
 
-// ==========================
 // Hotel Dashboard
-// ==========================
 export const getHotelBookings = async (req, res) => {
   try {
     const hotel = await Hotel.findOne({ owner: req.auth.userId });
 
     if (!hotel) {
-      return res.status(404).json({
-        success: false,
-        message: "No hotel found",
+      return res.json({
+        success: true,
+        dashboardData: {
+          totalBookings: 0,
+          totalRevenue: 0,
+          bookings: [],
+        },
       });
     }
 
@@ -174,7 +167,7 @@ export const getHotelBookings = async (req, res) => {
     const totalBookings = bookings.length;
 
     const totalRevenue = bookings.reduce(
-      (acc, b) => acc + (b.totalPrice || 0),
+      (acc, booking) => acc + (booking.totalPrice || 0),
       0
     );
 
@@ -188,6 +181,7 @@ export const getHotelBookings = async (req, res) => {
     });
   } catch (error) {
     console.error("Hotel booking fetch error:", error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch hotel bookings",
