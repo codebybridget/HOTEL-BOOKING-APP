@@ -2,20 +2,24 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    const userId = req.auth?.userId;
+    const clerkId = req.auth?.userId;
 
-    if (!userId) {
+    if (!clerkId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    const user = await User.findById(userId);
+    // Find user by Clerk ID
+    let user = await User.findById(clerkId);
 
+    // Auto-create user if missing
     if (!user) {
-      req.user = null;
-      return next();
+      user = await User.create({
+        _id: clerkId,
+        email: "temp@example.com",
+      });
     }
 
     req.user = user;
