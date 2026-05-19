@@ -6,7 +6,6 @@ const roomSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hotel",
       required: true,
-      index: true,
     },
 
     roomType: {
@@ -51,7 +50,6 @@ const roomSchema = new mongoose.Schema(
     isAvailable: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
@@ -70,11 +68,15 @@ roomSchema.pre("save", function (next) {
     this.roomType = this.roomType.trim();
   }
 
-  this.amenities = this.amenities.map((item) => item.trim());
+  this.amenities = this.amenities.map((item) =>
+    item.trim()
+  );
 
   next();
 });
 
-const Room = mongoose.model("Room", roomSchema);
+const Room =
+  mongoose.models.Room ||
+  mongoose.model("Room", roomSchema);
 
 export default Room;

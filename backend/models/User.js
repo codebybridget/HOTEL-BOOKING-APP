@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       unique: true,
-      index: true,
     },
 
     image: {
@@ -34,18 +33,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["user", "hotelOwner"],
       default: "user",
-      index: true,
     },
 
     recentSearchedCities: {
       type: [String],
       default: [],
-
       validate: {
         validator: function (arr) {
           return arr.length <= 10;
         },
-
         message: "Recent searched cities limit exceeded",
       },
     },
@@ -61,12 +57,10 @@ userSchema.index({ role: 1 });
 
 // HOOKS
 userSchema.pre("save", function (next) {
-  // Default username
   if (!this.username || this.username.trim() === "") {
     this.username = "Guest";
   }
 
-  // Remove duplicate cities
   if (this.recentSearchedCities?.length) {
     this.recentSearchedCities = [
       ...new Set(

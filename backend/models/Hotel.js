@@ -31,7 +31,6 @@ const hotelSchema = new mongoose.Schema(
       required: true,
       ref: "User",
       unique: true,
-      index: true,
     },
 
     city: {
@@ -39,7 +38,6 @@ const hotelSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
     },
 
     description: {
@@ -70,11 +68,12 @@ const hotelSchema = new mongoose.Schema(
   }
 );
 
-// Search indexes
+// INDEXES
 hotelSchema.index({ city: 1 });
 hotelSchema.index({ owner: 1 });
 hotelSchema.index({ name: "text", city: "text" });
 
-const Hotel = mongoose.model("Hotel", hotelSchema);
+const Hotel =
+  mongoose.models.Hotel || mongoose.model("Hotel", hotelSchema);
 
 export default Hotel;
