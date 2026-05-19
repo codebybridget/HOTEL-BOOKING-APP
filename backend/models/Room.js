@@ -13,6 +13,8 @@ const roomSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 2,
+      maxlength: 100,
     },
 
     pricePerNight: {
@@ -28,12 +30,22 @@ const roomSchema = new mongoose.Schema(
 
     images: {
       type: [String],
+
       validate: {
         validator: function (arr) {
-          return arr.length > 0;
+          return Array.isArray(arr) && arr.length > 0;
         },
+
         message: "At least one image is required",
       },
+
+      required: true,
+    },
+
+    maxGuests: {
+      type: Number,
+      default: 2,
+      min: 1,
     },
 
     isAvailable: {
@@ -42,26 +54,24 @@ const roomSchema = new mongoose.Schema(
       index: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// ==========================
 // INDEXES
-// ==========================
-
-// Fast lookup by hotel
 roomSchema.index({ hotel: 1 });
-
-// Availability + sorting optimization
 roomSchema.index({ isAvailable: 1, createdAt: -1 });
+roomSchema.index({ hotel: 1, isAvailable: 1 });
 
-// ==========================
-// HOOKS (optional)
-// ==========================
+// HOOKS
 roomSchema.pre("save", function (next) {
   if (this.roomType) {
     this.roomType = this.roomType.trim();
   }
+
+  this.amenities = this.amenities.map((item) => item.trim());
+
   next();
 });
 

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const bookingSchema = new mongoose.Schema(
   {
     user: {
-      type: String, // Clerk userId
+      type: String,
       ref: "User",
       required: true,
     },
@@ -51,6 +51,7 @@ const bookingSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
+      enum: ["pay_at_hotel", "card", "transfer"],
       default: "pay_at_hotel",
     },
 
@@ -59,28 +60,25 @@ const bookingSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-// ==========================
-// INDEXES (Performance)
-// ==========================
 bookingSchema.index({ room: 1, checkInDate: 1, checkOutDate: 1 });
 bookingSchema.index({ user: 1, createdAt: -1 });
+bookingSchema.index({ hotel: 1, createdAt: -1 });
 
-// ==========================
-// VALIDATION
-// ==========================
 bookingSchema.pre("save", function (next) {
   if (this.checkOutDate <= this.checkInDate) {
     return next(new Error("Check-out date must be after check-in date"));
   }
+
   next();
 });
 
-// ==========================
-// VIRTUAL (Optional)
-// ==========================
 bookingSchema.virtual("nights").get(function () {
   const diff = this.checkOutDate - this.checkInDate;
   return Math.ceil(diff / (1000 * 60 * 60 * 24));

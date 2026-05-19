@@ -2,9 +2,19 @@ import Hotel from "../models/Hotel.js";
 
 export const registerHotel = async (req, res) => {
   try {
-    const ownerId = req.auth.userId;
+    // Clerk Auth
+    const ownerId = req.auth?.userId;
+
+    if (!ownerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     let { name, address, contact, city } = req.body;
 
+    // Validation
     if (!name || !address || !contact || !city) {
       return res.status(400).json({
         success: false,
@@ -12,21 +22,36 @@ export const registerHotel = async (req, res) => {
       });
     }
 
+    // Sanitize Inputs
     name = name.trim();
     address = address.trim();
     contact = contact.trim();
-    city = city.trim().toLowerCase();
+    city =
+      city.trim().charAt(0).toUpperCase() +
+      city.trim().slice(1).toLowerCase();
 
-    const existingHotel = await Hotel.findOne({ owner: ownerId });
+    // Optional Contact Validation
+    if (contact.length < 7) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contact number",
+      });
+    }
+
+    // Check Existing Hotel
+    const existingHotel = await Hotel.findOne({
+      owner: ownerId,
+    });
 
     if (existingHotel) {
-      return res.json({
-        success: true,
+      return res.status(409).json({
+        success: false,
         message: "Hotel already registered",
         hotel: existingHotel,
       });
     }
 
+    // Create Hotel
     const hotel = await Hotel.create({
       owner: ownerId,
       name,
@@ -35,17 +60,17 @@ export const registerHotel = async (req, res) => {
       city,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Hotel registered successfully",
       hotel,
     });
   } catch (error) {
-    console.error("Hotel registration error:", error);
+    console.error("Hotel registration error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: error.message || "Failed to register hotel",
+      message: "Failed to register hotel",
     });
   }
 };

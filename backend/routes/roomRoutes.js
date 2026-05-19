@@ -1,7 +1,8 @@
 import express from "express";
+
 import upload from "../middleware/uploadMiddleware.js";
+
 import { protect } from "../middleware/authMiddleware.js";
-import { requireAuth } from "@clerk/express";
 
 import {
   createRoom,
@@ -23,22 +24,24 @@ roomRouter.get("/", getRooms);
    PROTECTED ROUTES
 ========================= */
 
-// Create room (hotel owner)
+// Create room
 roomRouter.post(
   "/",
-  requireAuth(),
   protect,
   upload.array("images", 4),
   createRoom
 );
 
-// Get owner's rooms
-roomRouter.get("/owner", requireAuth(), protect, getOwnerRooms);
+// Get hotel owner's rooms
+roomRouter.get(
+  "/owner",
+  protect,
+  getOwnerRooms
+);
 
-// Toggle availability (RESTful)
+// Toggle room availability
 roomRouter.patch(
   "/:id/availability",
-  requireAuth(),
   protect,
   toggleRoomAvailability
 );

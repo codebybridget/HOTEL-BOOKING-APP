@@ -3,33 +3,53 @@ import Title from "../components/Title";
 
 const About = () => {
   return (
-    <section className="px-6 md:px-16 lg:px-24 xl:px-32 py-24">
-      <div className="max-w-4xl">
+    <section className="px-6 md:px-16 lg:px-24 xl:px-32 py-28 md:py-36">
+      <div className="max-w-5xl">
         <Title
           align="left"
           title="About Us"
-          subTitle="Learn more about our mission, vision, and what makes our platform unique."
+          subTitle="Learn more about our mission, vision, and the experience we provide for travelers and hotel owners."
         />
 
-        <div className="mt-8 space-y-6 text-gray-600 leading-relaxed text-sm md:text-base">
+        <div className="mt-10 space-y-6 text-gray-600 leading-relaxed text-sm md:text-base">
           <p>
-            Welcome to our hotel booking platform — your gateway to discovering
-            exceptional places to stay around the world. We are committed to
-            providing a seamless and reliable booking experience for travelers
-            seeking comfort, luxury, and convenience.
-          </p>
- 
-          <p>
-            Our platform connects guests with carefully curated hotels, ensuring
-            quality, transparency, and value. Whether you're planning a business
-            trip, a family vacation, or a luxury getaway, we help you find the
-            perfect stay tailored to your needs.
+            Welcome to our hotel booking platform — a modern solution designed
+            to make hotel reservations simple, secure, and convenient. Our goal
+            is to connect travelers with trusted hotels while helping hotel
+            owners manage and grow their hospitality businesses online.
           </p>
 
           <p>
-            We focus on delivering a user-friendly experience, real-time
-            availability, and trusted listings to make your journey smooth from
-            start to finish.
+            We provide a smooth booking experience that allows users to browse
+            rooms, compare prices, explore hotel amenities, and reserve rooms
+            with confidence. Whether you are traveling for business, vacation,
+            family visits, or special events, we help you find the perfect place
+            to stay.
+          </p>
+
+          <p>
+            Our platform features hotels across major cities including Lagos,
+            Abuja, Kano, and Kaduna, offering a variety of room options ranging
+            from affordable stays to luxury accommodations.
+          </p>
+
+          <p>
+            We are committed to transparency, reliability, and user
+            satisfaction. Every feature on our platform is built to improve the
+            booking experience — from real-time room availability and secure
+            reservations to responsive hotel management tools.
+          </p>
+
+          <p>
+            Beyond hotel bookings, we aim to create a trusted digital ecosystem
+            where guests enjoy comfort and convenience while hotel owners gain
+            visibility, manage rooms efficiently, and increase bookings through
+            a professional online presence.
+          </p>
+
+          <p>
+            Our mission is to simplify hospitality through technology and create
+            memorable travel experiences for everyone.
           </p>
         </div>
       </div>

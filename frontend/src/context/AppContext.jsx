@@ -1,16 +1,22 @@
-import React from "react";
-import axios from "axios";
-import { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import axiosLib from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
-import { toast } from "react-hot-toast";
 
-const API_BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-axios.defaults.baseURL = API_BASE_URL;
+const axios = axiosLib.create({
+  baseURL: backendUrl,
+  withCredentials: true,
+});
 
-const AppContext = createContext();
+const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -22,7 +28,7 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [searchedCities, setSearchedCities] = useState([]);
 
-  const currency = import.meta.env.VITE_CURRENCY || "$";
+  const currency = import.meta.env.VITE_CURRENCY || "₦";
 
   useEffect(() => {
     const interceptor = axios.interceptors.request.use(
@@ -42,11 +48,15 @@ export const AppProvider = ({ children }) => {
       (error) => Promise.reject(error)
     );
 
-    return () => axios.interceptors.request.eject(interceptor);
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
   }, [getToken]);
 
   const fetchUser = async () => {
     try {
+      setRoleLoaded(false);
+
       const { data } = await axios.get("/api/user");
 
       if (data?.success) {
@@ -57,7 +67,7 @@ export const AppProvider = ({ children }) => {
         setSearchedCities([]);
       }
     } catch (error) {
-      console.error("Failed to load user:", error);
+      console.error("Failed to load user:", error.response?.data || error.message);
       setIsOwner(false);
       setSearchedCities([]);
     } finally {
@@ -66,30 +76,44 @@ export const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (isLoaded && user) {
-      fetchUser();
-    }
+    if (!isLoaded) return;
 
-    if (isLoaded && !user) {
+    if (user) {
+      fetchUser();
+    } else {
       setIsOwner(false);
       setSearchedCities([]);
       setRoleLoaded(true);
     }
   }, [isLoaded, user]);
 
-  const value = {
-    currency,
-    navigate,
-    axios,
-    user,
-    getToken,
-    isOwner,
-    roleLoaded,
-    showHotelReg,
-    setShowHotelReg,
-    searchedCities,
-    setSearchedCities,
-  };
+  const value = useMemo(
+    () => ({
+      currency,
+      navigate,
+      axios,
+      user,
+      getToken,
+      isOwner,
+      setIsOwner,
+      roleLoaded,
+      showHotelReg,
+      setShowHotelReg,
+      searchedCities,
+      setSearchedCities,
+      fetchUser,
+    }),
+    [
+      currency,
+      navigate,
+      user,
+      getToken,
+      isOwner,
+      roleLoaded,
+      showHotelReg,
+      searchedCities,
+    ]
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

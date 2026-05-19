@@ -6,12 +6,15 @@ const hotelSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 2,
+      maxlength: 100,
     },
 
     address: {
       type: String,
       required: true,
       trim: true,
+      maxlength: 300,
     },
 
     contact: {
@@ -22,12 +25,13 @@ const hotelSchema = new mongoose.Schema(
       maxlength: 20,
     },
 
-    // Clerk user ID (string)
+    // Clerk User ID
     owner: {
       type: String,
       required: true,
       ref: "User",
-      index: true, // faster lookup
+      unique: true,
+      index: true,
     },
 
     city: {
@@ -35,12 +39,13 @@ const hotelSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
+      index: true,
     },
 
-    // Optional (future scaling)
     description: {
       type: String,
       default: "",
+      maxlength: 2000,
     },
 
     images: {
@@ -54,15 +59,21 @@ const hotelSchema = new mongoose.Schema(
       min: 0,
       max: 5,
     },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// ==========================
-// INDEXES
-// ==========================
+// Search indexes
 hotelSchema.index({ city: 1 });
 hotelSchema.index({ owner: 1 });
+hotelSchema.index({ name: "text", city: "text" });
 
 const Hotel = mongoose.model("Hotel", hotelSchema);
 

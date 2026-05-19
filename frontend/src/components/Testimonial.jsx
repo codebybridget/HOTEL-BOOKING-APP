@@ -2,7 +2,7 @@ import React from "react";
 import Title from "./Title";
 import StarRating from "./StarRating";
 
-// Move data outside component (better performance)
+// Static testimonial data
 const testimonials = [
   {
     id: 1,
@@ -35,48 +35,55 @@ const testimonials = [
 
 const Testimonial = () => {
   return (
-    <section className="flex flex-col items-center text-black px-6 md:px-16 lg:px-24 bg-slate-50 py-24">
-      <Title
-        title="What Our Guests Say"
-        subTitle="Discover why discerning travelers consistently choose QuickStay for their exclusive and luxurious accommodations around the world."
-      />
+    <section className="bg-slate-50 py-24 px-6 md:px-16 lg:px-24 text-black">
+      <div className="max-w-6xl mx-auto flex flex-col items-center">
+        <Title
+          title="What Our Guests Say"
+          subTitle="Discover why discerning travelers consistently choose QuickStay for their exclusive and luxurious accommodations around the world."
+        />
 
-      {/* Testimonials Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16 w-full max-w-6xl">
-        {testimonials.map((t) => (
-          <div
-            key={t.id}
-            className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition"
-          >
-            {/* User Info */}
-            <div className="flex items-center gap-3">
-              <img
-                className="w-12 h-12 rounded-full object-cover"
-                src={t.image}
-                alt={`${t.name} profile`}
-              />
-              <div>
-                <p className="font-playfair text-lg font-medium">
-                  {t.name}
-                </p>
-                <p className="text-gray-500 text-sm">{t.address}</p>
-              </div>
-            </div>
-
-            {/* Rating */}
-            <div
-              className="mt-4"
-              aria-label={`Rated ${t.rating} out of 5`}
+        {/* Testimonials Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-16 w-full">
+          {testimonials.map((testimonial) => (
+            <article
+              key={testimonial.id}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
-              <StarRating rating={t.rating} />
-            </div>
+              {/* User Info */}
+              <div className="flex items-center gap-4">
+                <img
+                  src={testimonial.image}
+                  alt={`${testimonial.name} profile`}
+                  loading="lazy"
+                  className="w-14 h-14 rounded-full object-cover"
+                />
 
-            {/* Review */}
-            <p className="text-gray-500 mt-4 text-sm leading-relaxed">
-              &ldquo;{t.review}&rdquo;
-            </p>
-          </div>
-        ))}
+                <div>
+                  <h3 className="font-playfair text-lg font-semibold">
+                    {testimonial.name}
+                  </h3>
+
+                  <p className="text-sm text-gray-500">
+                    {testimonial.address}
+                  </p>
+                </div>
+              </div>
+
+              {/* Rating */}
+              <div
+                className="mt-4"
+                aria-label={`${testimonial.name} rated ${testimonial.rating} out of 5`}
+              >
+                <StarRating rating={testimonial.rating} />
+              </div>
+
+              {/* Review */}
+              <blockquote className="mt-4 text-sm leading-relaxed text-gray-600">
+                &ldquo;{testimonial.review}&rdquo;
+              </blockquote>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

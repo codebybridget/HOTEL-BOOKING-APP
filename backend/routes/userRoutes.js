@@ -1,15 +1,30 @@
 import express from "express";
-import { requireAuth } from "@clerk/express";
 
 import {
   getUserData,
   setUserRole,
 } from "../controllers/userController.js";
 
+import { protect } from "../middleware/authMiddleware.js";
+
 const userRouter = express.Router();
 
-userRouter.get("/", requireAuth(), getUserData);
+/* =========================
+   PROTECTED ROUTES
+========================= */
 
-userRouter.post("/set-role", requireAuth(), setUserRole);
+// Get current user data
+userRouter.get(
+  "/",
+  protect,
+  getUserData
+);
+
+// Set user role
+userRouter.post(
+  "/set-role",
+  protect,
+  setUserRole
+);
 
 export default userRouter;

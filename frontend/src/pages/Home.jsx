@@ -7,13 +7,22 @@ import Newsletter from "../components/NewsLetter";
 
 const Home = () => {
   return (
-    <>
+    <main className="overflow-x-hidden">
+      {/* HERO */}
       <Hero />
+
+      {/* FEATURED DESTINATIONS */}
       <FeaturedDestination />
+
+      {/* EXCLUSIVE OFFERS */}
       <ExclusiveOffers />
+
+      {/* TESTIMONIALS */}
       <Testimonial />
+
+      {/* NEWSLETTER */}
       <Newsletter />
-    </>
+    </main>
   );
 };
 

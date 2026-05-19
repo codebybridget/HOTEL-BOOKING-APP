@@ -7,30 +7,33 @@ export const protect = async (req, res, next) => {
     if (!clerkId) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized",
+        message: "Unauthorized. Please login again.",
       });
     }
 
-    // Find user by Clerk ID
     let user = await User.findById(clerkId);
 
-    // Auto-create user if missing
     if (!user) {
       user = await User.create({
         _id: clerkId,
-        email: "temp@example.com",
+        username: "Guest",
+        email: `${clerkId}@clerk.local`,
+        image: "",
+        role: "user",
+        recentSearchedCities: [],
       });
     }
 
     req.user = user;
+    req.userId = clerkId;
 
     next();
   } catch (error) {
-    console.error("Protect middleware error:", error);
+    console.error("Protect middleware error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Authentication failed",
     });
   }
 };

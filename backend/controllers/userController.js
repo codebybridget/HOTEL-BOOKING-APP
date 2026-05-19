@@ -1,31 +1,52 @@
 import User from "../models/User.js";
 
+// GET USER DATA
 export const getUserData = async (req, res) => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
 
-    const user = await User.findById(userId);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-    res.json({
+    const user = await User.findById(userId).lean();
+
+    return res.json({
       success: true,
-      role: user?.role || null,
-      recentSearchedCities: user?.recentSearchedCities || [],
+      user: {
+        role: user?.role || "user",
+        recentSearchedCities: user?.recentSearchedCities || [],
+      },
     });
   } catch (error) {
-    console.error("Get user error:", error);
-    res.status(500).json({
+    console.error("Get user error:", error.message);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to fetch user data",
     });
   }
 };
 
+// SET USER ROLE
 export const setUserRole = async (req, res) => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
     const { role } = req.body;
 
-    if (!["user", "hotelOwner"].includes(role)) {
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const allowedRoles = ["user", "hotelOwner"];
+
+    if (!allowedRoles.includes(role)) {
       return res.status(400).json({
         success: false,
         message: "Invalid role",
@@ -38,6 +59,7 @@ export const setUserRole = async (req, res) => {
         $set: {
           role,
         },
+
         $setOnInsert: {
           _id: userId,
           username: "Guest",
@@ -49,19 +71,21 @@ export const setUserRole = async (req, res) => {
       {
         new: true,
         upsert: true,
+        runValidators: true,
       }
     );
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Role updated",
+      message: "Role updated successfully",
       role: user.role,
     });
   } catch (error) {
-    console.error("Set role error:", error);
-    res.status(500).json({
+    console.error("Set role error:", error.message);
+
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to update role",
     });
   }
 };

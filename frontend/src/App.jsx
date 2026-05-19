@@ -31,7 +31,9 @@ const App = () => {
     navigate,
     showHotelReg,
     isOwner,
+    setIsOwner,
     roleLoaded,
+    fetchUser,
   } = useAppContext();
 
   const shouldShowRoleSelect = user && roleLoaded && !isOwner;
@@ -40,22 +42,27 @@ const App = () => {
     try {
       const { data } = await axios.post("/api/user/set-role", { role });
 
-      if (data.success) {
-        toast.success("Account type selected");
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to select account type");
+        return;
+      }
 
-        if (role === "hotelOwner") {
-          navigate("/owner");
-        } else {
-          navigate("/");
-        }
+      toast.success("Account type selected");
 
-        window.location.reload();
+      await fetchUser();
+
+      if (role === "hotelOwner") {
+        setIsOwner(true);
+        navigate("/owner");
       } else {
-        toast.error(data.message || "Failed to select role");
+        setIsOwner(false);
+        navigate("/");
       }
     } catch (error) {
-      console.error("set role error:",error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to select account type");
+      console.error("Set role error:", error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message || "Failed to select account type"
+      );
     }
   };
 
@@ -83,7 +90,11 @@ const App = () => {
 
         <Route
           path="*"
-          element={<h1 className="text-center mt-20 text-2xl">Page Not Found</h1>}
+          element={
+            <h1 className="text-center mt-20 text-2xl">
+              Page Not Found
+            </h1>
+          }
         />
       </Routes>
 

@@ -10,13 +10,13 @@ export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => 
 
     const bookings = await Booking.find({
       room,
-      checkInDate: { $lte: checkOut },
-      checkOutDate: { $gte: checkIn },
+      checkInDate: { $lt: checkOut },
+      checkOutDate: { $gt: checkIn },
     });
 
     return bookings.length === 0;
   } catch (error) {
-    console.error("Availability check failed:", error);
+    console.error("Availability check failed:", error.message);
     return false;
   }
 };
@@ -33,17 +33,32 @@ export const checkAvailabilityAPI = async (req, res) => {
       });
     }
 
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+
+    if (checkOut <= checkIn) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date range",
+      });
+    }
+
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
       room,
     });
 
-    res.json({ success: true, isAvailable });
+    res.json({
+      success: true,
+      isAvailable,
+    });
   } catch (error) {
+    console.error("Check availability error:", error.message);
+
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to check availability",
     });
   }
 };
@@ -71,6 +86,15 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    const roomData = await Room.findById(room).populate("hotel");
+
+    if (!roomData) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
     const isAvailable = await checkAvailability({
       checkInDate,
       checkOutDate,
@@ -84,18 +108,8 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    const roomData = await Room.findById(room).populate("hotel");
-
-    if (!roomData) {
-      return res.status(404).json({
-        success: false,
-        message: "Room not found",
-      });
-    }
-
-    const nights = Math.max(
-      1,
-      Math.ceil((checkOut - checkIn) / (1000 * 3600 * 24))
+    const nights = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     const totalPrice = roomData.pricePerNight * nights;
@@ -110,13 +124,14 @@ export const createBooking = async (req, res) => {
       totalPrice,
     });
 
-    res.json({
+    res.status(201).json({
       success: true,
       message: "Booking created successfully",
       booking,
     });
   } catch (error) {
-    console.error("Create booking error:", error);
+    console.error("Create booking error:", error.message);
+
     res.status(500).json({
       success: false,
       message: "Failed to create booking",
@@ -130,12 +145,16 @@ export const getUserBookings = async (req, res) => {
     const user = req.auth.userId;
 
     const bookings = await Booking.find({ user })
-      .populate("room hotel")
+      .populate("room")
+      .populate("hotel")
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, bookings });
+    res.json({
+      success: true,
+      bookings,
+    });
   } catch (error) {
-    console.error("User bookings fetch error:", error);
+    console.error("User bookings fetch error:", error.message);
 
     res.status(500).json({
       success: false,
@@ -161,13 +180,14 @@ export const getHotelBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find({ hotel: hotel._id })
-      .populate("room hotel")
+      .populate("room")
+      .populate("hotel")
       .sort({ createdAt: -1 });
 
     const totalBookings = bookings.length;
 
     const totalRevenue = bookings.reduce(
-      (acc, booking) => acc + (booking.totalPrice || 0),
+      (acc, booking) => acc + Number(booking.totalPrice || 0),
       0
     );
 
@@ -180,7 +200,7 @@ export const getHotelBookings = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Hotel booking fetch error:", error);
+    console.error("Hotel booking fetch error:", error.message);
 
     res.status(500).json({
       success: false,

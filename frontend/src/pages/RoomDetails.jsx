@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { facilityIcons, roomCommonData } from "../assets/assets";
 import StarRating from "../components/StarRating";
@@ -8,15 +7,20 @@ import { toast } from "react-hot-toast";
 
 const RoomDetails = () => {
   const { id } = useParams();
-  const { axios } = useAppContext();
+
+  const { axios, currency } = useAppContext();
 
   const [room, setRoom] = useState(null);
-  const [mainImage, setMainImage] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Booking state
+  const [mainImage, setMainImage] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  // BOOKING
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
+
   const [guests, setGuests] = useState(1);
 
   // =========================
@@ -27,95 +31,172 @@ const RoomDetails = () => {
       try {
         const { data } = await axios.get("/api/rooms");
 
-        if (data.success) {
+        if (data?.success) {
           const foundRoom = data.rooms.find(
             (r) => String(r._id) === String(id)
           );
 
           if (foundRoom) {
             setRoom(foundRoom);
-            setMainImage(foundRoom.images?.[0]);
+
+            setMainImage(
+              foundRoom?.images?.[0] || ""
+            );
           }
         }
       } catch (error) {
-        console.error("Error fetching room:", error);
+        console.error(
+          "Fetch room error:",
+          error.response?.data || error.message
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchRoom();
-  }, [id]);
+  }, [axios, id]);
 
   // =========================
-  // HANDLE BOOKING
+  // BOOK ROOM
   // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const { data } = await axios.post("/api/bookings", {
-        room: room._id,
-        checkInDate,
-        checkOutDate,
-        guests,
-      });
+    if (!checkInDate || !checkOutDate) {
+      toast.error("Select booking dates");
+      return;
+    }
 
-      if (data.success) {
-        toast.success("Booking successful!");
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
+    if (new Date(checkOutDate) <= new Date(checkInDate)) {
       toast.error(
-        error?.response?.data?.message || "Booking failed"
+        "Check-out date must be after check-in date"
       );
+
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+
+      const { data } = await axios.post(
+        "/api/bookings",
+        {
+          room: room._id,
+          checkInDate,
+          checkOutDate,
+          guests: Number(guests),
+        }
+      );
+
+      if (!data?.success) {
+        toast.error(
+          data?.message || "Booking failed"
+        );
+
+        return;
+      }
+
+      toast.success(
+        data.message || "Booking successful"
+      );
+
+      setCheckInDate("");
+      setCheckOutDate("");
+
+      setGuests(1);
+    } catch (error) {
+      console.error(
+        "Booking error:",
+        error.response?.data || error.message
+      );
+
+      toast.error(
+        error.response?.data?.message ||
+          "Booking failed"
+      );
+    } finally {
+      setBookingLoading(false);
     }
   };
 
+  // =========================
+  // LOADING
+  // =========================
   if (loading) {
-    return <p className="pt-28 text-center">Loading...</p>;
+    return (
+      <p className="pt-28 text-center">
+        Loading room...
+      </p>
+    );
   }
 
+  // =========================
+  // NOT FOUND
+  // =========================
   if (!room) {
-    return <p className="pt-28 text-center">Room not found</p>;
+    return (
+      <p className="pt-28 text-center">
+        Room not found
+      </p>
+    );
   }
 
   return (
     <div className="py-28 md:py-36 px-4 lg:px-24 xl:px-32">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-6">
         <h1 className="text-3xl md:text-4xl font-playfair">
           {room?.hotel?.name}
-          <span className="text-sm ml-2">({room?.roomType})</span>
+
+          <span className="text-sm ml-2 text-gray-500">
+            ({room?.roomType})
+          </span>
         </h1>
 
-        <span className="text-xs px-3 py-1 bg-orange-500 text-white rounded">
-          Available
+        <span
+          className={`text-xs px-3 py-1 rounded text-white ${
+            room?.isAvailable
+              ? "bg-green-600"
+              : "bg-red-500"
+          }`}
+        >
+          {room?.isAvailable
+            ? "Available"
+            : "Unavailable"}
         </span>
       </div>
 
-      {/* Images */}
+      {/* IMAGES */}
       <div className="flex flex-col lg:flex-row gap-4">
+        {/* MAIN IMAGE */}
         <div className="flex-[2]">
           <img
             src={mainImage}
+            alt="room"
             className="w-full h-[360px] rounded-lg object-cover"
           />
+
           <p className="mt-2 text-gray-600">
             {room?.hotel?.address}
           </p>
         </div>
 
+        {/* GALLERY */}
         {room?.images?.length > 1 && (
           <div className="grid grid-cols-2 gap-3 flex-1">
             {room.images.map((img, i) => (
               <img
                 key={i}
                 src={img}
-                onClick={() => setMainImage(img)}
-                className={`h-[170px] rounded-lg cursor-pointer ${
-                  mainImage === img ? "ring-2 ring-orange-500" : ""
+                alt={`room-${i}`}
+                onClick={() =>
+                  setMainImage(img)
+                }
+                className={`h-[170px] w-full object-cover rounded-lg cursor-pointer ${
+                  mainImage === img
+                    ? "ring-2 ring-orange-500"
+                    : ""
                 }`}
               />
             ))}
@@ -123,73 +204,156 @@ const RoomDetails = () => {
         )}
       </div>
 
-      {/* Rating */}
+      {/* RATING */}
       <div className="flex items-center mt-6">
         <StarRating rating={4} />
-        <p className="ml-2 text-gray-500 text-sm">Reviews</p>
+
+        <p className="ml-2 text-gray-500 text-sm">
+          Reviews
+        </p>
       </div>
 
-      {/* Amenities */}
+      {/* DETAILS */}
       <div className="flex flex-col md:flex-row justify-between mt-10 gap-6">
         <div>
           <h2 className="text-2xl font-playfair">
             Experience Luxury Like Never Before
           </h2>
 
+          {/* AMENITIES */}
           <div className="flex flex-wrap gap-3 mt-4">
-            {room?.amenities?.map((item, i) => (
-              <div key={i} className="flex gap-2 bg-gray-100 px-3 py-2 rounded">
-                <img src={facilityIcons[item]} className="w-5" />
-                <span className="text-xs">{item}</span>
-              </div>
-            ))}
+            {room?.amenities?.map(
+              (item, i) => (
+                <div
+                  key={i}
+                  className="flex gap-2 bg-gray-100 px-3 py-2 rounded"
+                >
+                  <img
+                    src={
+                      facilityIcons[item]
+                    }
+                    alt={item}
+                    className="w-5"
+                  />
+
+                  <span className="text-xs">
+                    {item}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </div>
 
+        {/* PRICE */}
         <p className="text-2xl font-semibold">
-          ${room?.pricePerNight} / night
+          {currency}
+          {Number(
+            room?.pricePerNight || 0
+          ).toLocaleString()}{" "}
+          / night
         </p>
       </div>
 
-      {/* Booking */}
+      {/* BOOKING FORM */}
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col md:flex-row gap-6 bg-white shadow p-6 rounded mt-16"
+        className="flex flex-col md:flex-row gap-6 bg-white shadow-lg border p-6 rounded-xl mt-16"
       >
-        <input
-          type="date"
-          required
-          onChange={(e) => setCheckInDate(e.target.value)}
-          className="input"
-        />
+        {/* CHECK IN */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-500 mb-1">
+            Check In
+          </label>
 
-        <input
-          type="date"
-          required
-          onChange={(e) => setCheckOutDate(e.target.value)}
-          className="input"
-        />
+          <input
+            type="date"
+            required
+            value={checkInDate}
+            min={
+              new Date()
+                .toISOString()
+                .split("T")[0]
+            }
+            onChange={(e) =>
+              setCheckInDate(
+                e.target.value
+              )
+            }
+            className="border rounded px-3 py-2"
+          />
+        </div>
 
-        <input
-          type="number"
-          min={1}
-          value={guests}
-          onChange={(e) => setGuests(e.target.value)}
-          className="input w-20"
-        />
+        {/* CHECK OUT */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-500 mb-1">
+            Check Out
+          </label>
 
-        <button className="bg-black text-white px-6 py-2 rounded">
-          Book Now
-        </button>
+          <input
+            type="date"
+            required
+            value={checkOutDate}
+            min={checkInDate}
+            onChange={(e) =>
+              setCheckOutDate(
+                e.target.value
+              )
+            }
+            className="border rounded px-3 py-2"
+          />
+        </div>
+
+        {/* GUESTS */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-500 mb-1">
+            Guests
+          </label>
+
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={guests}
+            onChange={(e) =>
+              setGuests(
+                e.target.value
+              )
+            }
+            className="border rounded px-3 py-2 w-24"
+          />
+        </div>
+
+        {/* BUTTON */}
+        <div className="flex items-end">
+          <button
+            type="submit"
+            disabled={bookingLoading}
+            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-900 transition disabled:opacity-50"
+          >
+            {bookingLoading
+              ? "Booking..."
+              : "Book Now"}
+          </button>
+        </div>
       </form>
 
-      {/* Specs */}
+      {/* ROOM SPECS */}
       <div className="mt-24 space-y-4">
         {roomCommonData.map((spec, i) => (
-          <div key={i} className="flex gap-3">
-            <img src={spec.icon} className="w-5" />
+          <div
+            key={i}
+            className="flex gap-3"
+          >
+            <img
+              src={spec.icon}
+              alt={spec.title}
+              className="w-5 h-5"
+            />
+
             <div>
               <p>{spec.title}</p>
+
               <p className="text-gray-500 text-sm">
                 {spec.description}
               </p>

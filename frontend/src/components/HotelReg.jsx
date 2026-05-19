@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { assets, cities } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
 const HotelReg = () => {
-  const { setShowHotelReg, axios, navigate } = useAppContext();
+  const {
+    setShowHotelReg,
+    axios,
+    navigate,
+    setIsOwner,
+    fetchUser,
+  } = useAppContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,32 +30,47 @@ const HotelReg = () => {
   }, []);
 
   const handleChange = (e) => {
+    const { id, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.id]: e.target.value,
+      [id]: value,
     }));
   };
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (!formData.name || !formData.contact || !formData.address || !formData.city) {
+      toast.error("Please fill all fields");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const { data } = await axios.post("/api/hotels", formData);
 
-      if (data?.success) {
-        toast.success(data.message || "Hotel registered successfully!");
-        setShowHotelReg(false);
-        navigate("/owner");
-        window.location.reload();
-      } else {
-        toast.error(data?.message || "Something went wrong.");
+      if (!data?.success) {
+        toast.error(data?.message || "Failed to register hotel");
+        return;
       }
+
+      toast.success(data.message || "Hotel registered successfully");
+
+      setIsOwner(true);
+      await fetchUser();
+
+      setShowHotelReg(false);
+      navigate("/owner");
     } catch (error) {
-      console.error("Hotel registration error:", error.response?.data || error.message);
+      console.error(
+        "Hotel registration error:",
+        error.response?.data || error.message
+      );
 
       toast.error(
-        error?.response?.data?.message || "Failed to register hotel."
+        error.response?.data?.message || "Failed to register hotel"
       );
     } finally {
       setLoading(false);
@@ -91,7 +112,7 @@ const HotelReg = () => {
             { id: "address", label: "Address", type: "text" },
           ].map((field) => (
             <div key={field.id} className="w-full mt-4">
-              <label className="text-gray-500 text-sm">
+              <label htmlFor={field.id} className="text-gray-500 text-sm">
                 {field.label}
               </label>
 
@@ -107,7 +128,9 @@ const HotelReg = () => {
           ))}
 
           <div className="w-full mt-4">
-            <label className="text-gray-500 text-sm">City</label>
+            <label htmlFor="city" className="text-gray-500 text-sm">
+              City
+            </label>
 
             <select
               id="city"
@@ -117,6 +140,7 @@ const HotelReg = () => {
               className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500"
             >
               <option value="">Select City</option>
+
               {cities.map((city) => (
                 <option key={city} value={city}>
                   {city}
