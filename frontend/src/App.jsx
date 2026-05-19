@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
@@ -39,6 +39,22 @@ const App = () => {
 
   const shouldShowRoleSelect = user && roleLoaded && !isOwner;
 
+  const ProtectedOwnerRoute = ({ children }) => {
+    if (!roleLoaded) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      );
+    }
+
+    if (!user || !isOwner) {
+      return <Navigate to="/rooms" replace />;
+    }
+
+    return children;
+  };
+
   const handleRoleSelect = async (role) => {
     try {
       const { data } = await axios.post("/api/user/set-role", { role });
@@ -57,7 +73,7 @@ const App = () => {
         setShowHotelReg(true);
       } else {
         setIsOwner(false);
-        navigate("/");
+        navigate("/rooms");
       }
     } catch (error) {
       console.error("Set role error:", error.response?.data || error.message);
@@ -84,7 +100,14 @@ const App = () => {
         <Route path="/experience" element={<Experience />} />
         <Route path="/about" element={<About />} />
 
-        <Route path="/owner" element={<Layout />}>
+        <Route
+          path="/owner"
+          element={
+            <ProtectedOwnerRoute>
+              <Layout />
+            </ProtectedOwnerRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="add-room" element={<AddRoom />} />
           <Route path="list-room" element={<ListRoom />} />

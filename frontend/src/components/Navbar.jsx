@@ -48,11 +48,10 @@ const Navbar = () => {
     isOwner,
     setIsOwner,
     fetchUser,
+    setShowHotelReg,
   } = useAppContext();
 
-  // =========================
   // SCROLL EFFECT
-  // =========================
   useEffect(() => {
     const handleScroll = () => {
       if (location.pathname !== "/") {
@@ -66,19 +65,18 @@ const Navbar = () => {
 
     window.addEventListener("scroll", handleScroll);
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () =>
+      window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  // =========================
   // LOCK BODY SCROLL
-  // =========================
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? "hidden" : "auto";
+    document.body.style.overflow = isMenuOpen
+      ? "hidden"
+      : "auto";
   }, [isMenuOpen]);
 
-  // =========================
   // ROLE SELECTION
-  // =========================
   const handleRoleSelect = async (role) => {
     try {
       const { data } = await axios.post(
@@ -96,10 +94,10 @@ const Navbar = () => {
 
       if (role === "hotelOwner") {
         setIsOwner(true);
-        navigate("/owner");
+        setShowHotelReg(true);
       } else {
         setIsOwner(false);
-        navigate("/");
+        navigate("/rooms");
       }
     } catch (error) {
       console.error(
@@ -153,20 +151,21 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {user && (
+          {user && !isOwner && (
             <button
-              onClick={() => {
-                if (isOwner) {
-                  navigate("/owner");
-                } else {
-                  setShowRoleSelect(true);
-                }
-              }}
+              onClick={() => setShowRoleSelect(true)}
               className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
             >
-              {isOwner
-                ? "Dashboard"
-                : "List your Hotel"}
+              List your Hotel
+            </button>
+          )}
+
+          {user && isOwner && (
+            <button
+              onClick={() => navigate("/owner")}
+              className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
+            >
+              Dashboard
             </button>
           )}
         </div>
@@ -254,22 +253,27 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {user && (
+          {user && !isOwner && (
             <button
               onClick={() => {
                 setIsMenuOpen(false);
-
-                if (isOwner) {
-                  navigate("/owner");
-                } else {
-                  setShowRoleSelect(true);
-                }
+                setShowRoleSelect(true);
               }}
               className="border px-4 py-2 rounded-full"
             >
-              {isOwner
-                ? "Dashboard"
-                : "List your Hotel"}
+              List your Hotel
+            </button>
+          )}
+
+          {user && isOwner && (
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                navigate("/owner");
+              }}
+              className="border px-4 py-2 rounded-full"
+            >
+              Dashboard
             </button>
           )}
         </div>
