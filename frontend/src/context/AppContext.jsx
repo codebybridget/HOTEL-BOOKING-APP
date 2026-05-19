@@ -60,14 +60,20 @@ export const AppProvider = ({ children }) => {
       const { data } = await axios.get("/api/user");
 
       if (data?.success) {
-        setIsOwner(data.role === "hotelOwner");
-        setSearchedCities(data.recentSearchedCities || []);
+        const userData = data.user || {};
+
+        setIsOwner(userData.role === "hotelOwner");
+        setSearchedCities(userData.recentSearchedCities || []);
       } else {
         setIsOwner(false);
         setSearchedCities([]);
       }
     } catch (error) {
-      console.error("Failed to load user:", error.response?.data || error.message);
+      console.error(
+        "Failed to load user:",
+        error.response?.data || error.message
+      );
+
       setIsOwner(false);
       setSearchedCities([]);
     } finally {

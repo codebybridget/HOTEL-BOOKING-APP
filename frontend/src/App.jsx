@@ -30,6 +30,7 @@ const App = () => {
     axios,
     navigate,
     showHotelReg,
+    setShowHotelReg,
     isOwner,
     setIsOwner,
     roleLoaded,
@@ -53,13 +54,14 @@ const App = () => {
 
       if (role === "hotelOwner") {
         setIsOwner(true);
-        navigate("/owner");
+        setShowHotelReg(true);
       } else {
         setIsOwner(false);
         navigate("/");
       }
     } catch (error) {
       console.error("Set role error:", error.response?.data || error.message);
+
       toast.error(
         error.response?.data?.message || "Failed to select account type"
       );
@@ -91,9 +93,7 @@ const App = () => {
         <Route
           path="*"
           element={
-            <h1 className="text-center mt-20 text-2xl">
-              Page Not Found
-            </h1>
+            <h1 className="text-center mt-20 text-2xl">Page Not Found</h1>
           }
         />
       </Routes>
