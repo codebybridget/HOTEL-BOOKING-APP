@@ -2,7 +2,7 @@ import Booking from "../models/Booking.js";
 import Room from "../models/Room.js";
 import Hotel from "../models/Hotel.js";
 
-// Check Availability
+// CHECK AVAILABILITY
 export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
   try {
     const checkIn = new Date(checkInDate);
@@ -10,6 +10,7 @@ export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => 
 
     const bookings = await Booking.find({
       room,
+      status: { $ne: "cancelled" },
       checkInDate: { $lt: checkOut },
       checkOutDate: { $gt: checkIn },
     });
@@ -21,7 +22,7 @@ export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => 
   }
 };
 
-// Check Availability API
+// CHECK AVAILABILITY API
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, room } = req.body;
@@ -36,10 +37,33 @@ export const checkAvailabilityAPI = async (req, res) => {
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
 
+    if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format",
+      });
+    }
+
     if (checkOut <= checkIn) {
       return res.status(400).json({
         success: false,
         message: "Invalid date range",
+      });
+    }
+
+    const roomExists = await Room.findById(room);
+
+    if (!roomExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    if (!roomExists.isAvailable) {
+      return res.json({
+        success: true,
+        isAvailable: false,
       });
     }
 
@@ -49,25 +73,32 @@ export const checkAvailabilityAPI = async (req, res) => {
       room,
     });
 
-    res.json({
+    return res.json({
       success: true,
       isAvailable,
     });
   } catch (error) {
     console.error("Check availability error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to check availability",
     });
   }
 };
 
-// Create Booking
+// CREATE BOOKING
 export const createBooking = async (req, res) => {
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
-    const user = req.auth.userId;
+    const user = req.auth?.userId;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     if (!room || !checkInDate || !checkOutDate || !guests) {
       return res.status(400).json({
@@ -78,11 +109,26 @@ export const createBooking = async (req, res) => {
 
     const checkIn = new Date(checkInDate);
     const checkOut = new Date(checkOutDate);
+    const guestCount = Number(guests);
+
+    if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format",
+      });
+    }
 
     if (checkOut <= checkIn) {
       return res.status(400).json({
         success: false,
         message: "Invalid date range",
+      });
+    }
+
+    if (Number.isNaN(guestCount) || guestCount < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid guest count",
       });
     }
 
@@ -92,6 +138,20 @@ export const createBooking = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Room not found",
+      });
+    }
+
+    if (!roomData.isAvailable) {
+      return res.status(400).json({
+        success: false,
+        message: "Room is currently unavailable",
+      });
+    }
+
+    if (roomData.maxGuests && guestCount > roomData.maxGuests) {
+      return res.status(400).json({
+        success: false,
+        message: `This room allows maximum ${roomData.maxGuests} guests`,
       });
     }
 
@@ -118,13 +178,13 @@ export const createBooking = async (req, res) => {
       user,
       room,
       hotel: roomData.hotel._id,
-      guests: Number(guests),
+      guests: guestCount,
       checkInDate: checkIn,
       checkOutDate: checkOut,
       totalPrice,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Booking created successfully",
       booking,
@@ -132,41 +192,57 @@ export const createBooking = async (req, res) => {
   } catch (error) {
     console.error("Create booking error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to create booking",
     });
   }
 };
 
-// User Bookings
+// USER BOOKINGS
 export const getUserBookings = async (req, res) => {
   try {
-    const user = req.auth.userId;
+    const user = req.auth?.userId;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     const bookings = await Booking.find({ user })
       .populate("room")
       .populate("hotel")
       .sort({ createdAt: -1 });
 
-    res.json({
+    return res.json({
       success: true,
       bookings,
     });
   } catch (error) {
     console.error("User bookings fetch error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch bookings",
     });
   }
 };
 
-// Hotel Dashboard
+// HOTEL DASHBOARD BOOKINGS
 export const getHotelBookings = async (req, res) => {
   try {
-    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    const ownerId = req.auth?.userId;
+
+    if (!ownerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const hotel = await Hotel.findOne({ owner: ownerId });
 
     if (!hotel) {
       return res.json({
@@ -191,7 +267,7 @@ export const getHotelBookings = async (req, res) => {
       0
     );
 
-    res.json({
+    return res.json({
       success: true,
       dashboardData: {
         totalBookings,
@@ -202,7 +278,7 @@ export const getHotelBookings = async (req, res) => {
   } catch (error) {
     console.error("Hotel booking fetch error:", error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch hotel bookings",
     });

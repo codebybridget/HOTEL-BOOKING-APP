@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { assets, facilityIcons } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+
 import StarRating from "../components/StarRating";
 import { useAppContext } from "../context/AppContext";
 
@@ -38,6 +42,8 @@ const RadioButton = ({ label, selected, onChange }) => (
 const AllRooms = () => {
   const navigate = useNavigate();
 
+  const [searchParams] = useSearchParams();
+
   const { axios, currency } = useAppContext();
 
   const [openFilters, setOpenFilters] = useState(false);
@@ -49,6 +55,19 @@ const AllRooms = () => {
   const [selectedPrices, setSelectedPrices] = useState([]);
 
   const [sortOption, setSortOption] = useState("");
+
+  // SEARCH PARAMS
+  const destination =
+    searchParams.get("destination") || "";
+
+  const checkInDate =
+    searchParams.get("checkInDate") || "";
+
+  const checkOutDate =
+    searchParams.get("checkOutDate") || "";
+
+  const guests =
+    Number(searchParams.get("guests")) || 1;
 
   const roomTypes = [
     "Single Bed",
@@ -130,10 +149,24 @@ const AllRooms = () => {
   };
 
   // =========================
-  // FILTER + SORT
+  // FILTER + SEARCH + SORT
   // =========================
   const filteredRooms = useMemo(() => {
     let filtered = [...rooms];
+
+    // DESTINATION SEARCH
+    if (destination) {
+      filtered = filtered.filter((room) =>
+        room?.hotel?.city
+          ?.toLowerCase()
+          .includes(destination.toLowerCase())
+      );
+    }
+
+    // GUEST FILTER
+    filtered = filtered.filter(
+      (room) => room.maxGuests >= guests
+    );
 
     // ROOM TYPE FILTER
     if (selectedTypes.length > 0) {
@@ -185,6 +218,10 @@ const AllRooms = () => {
     selectedTypes,
     selectedPrices,
     sortOption,
+    destination,
+    guests,
+    checkInDate,
+    checkOutDate,
   ]);
 
   return (
@@ -198,6 +235,12 @@ const AllRooms = () => {
         <p className="text-sm md:text-base text-gray-500 mt-2 max-w-xl">
           Explore available rooms and book your perfect stay.
         </p>
+
+        {destination && (
+          <p className="mt-3 text-sm text-blue-600">
+            Showing rooms in {destination}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -221,7 +264,6 @@ const AllRooms = () => {
               openFilters ? "block" : "hidden"
             } lg:block p-5`}
           >
-            {/* ROOM TYPES */}
             <p className="font-medium mb-2">
               Room Type
             </p>
@@ -237,7 +279,6 @@ const AllRooms = () => {
               />
             ))}
 
-            {/* PRICE */}
             <p className="font-medium mt-5 mb-2">
               Price Range
             </p>
@@ -253,7 +294,6 @@ const AllRooms = () => {
               />
             ))}
 
-            {/* SORT */}
             <p className="font-medium mt-5 mb-2">
               Sort By
             </p>
@@ -281,20 +321,15 @@ const AllRooms = () => {
                 key={room._id}
                 className="flex flex-col md:flex-row gap-6 border-b pb-8"
               >
-                {/* IMAGE */}
                 <img
                   src={room?.images?.[0]}
-                  alt={
-                    room?.hotel?.name ||
-                    "Hotel room"
-                  }
+                  alt={room?.hotel?.name}
                   onClick={() =>
                     handleNavigate(room._id)
                   }
                   className="md:w-1/2 h-60 object-cover rounded-xl cursor-pointer"
                 />
 
-                {/* DETAILS */}
                 <div className="md:w-1/2 flex flex-col gap-2">
                   <p className="text-gray-500 text-sm capitalize">
                     {room?.hotel?.city}
@@ -329,7 +364,6 @@ const AllRooms = () => {
                     </span>
                   </div>
 
-                  {/* AMENITIES */}
                   <div className="flex flex-wrap gap-3 mt-3">
                     {room?.amenities?.map(
                       (item, i) => (
@@ -353,7 +387,6 @@ const AllRooms = () => {
                     )}
                   </div>
 
-                  {/* PRICE */}
                   <p className="text-lg font-semibold text-gray-800 mt-3">
                     {currency}
                     {Number(

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { assets, cities } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -15,12 +16,32 @@ const Hero = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!destination.trim()) {
+      toast.error("Please enter a destination");
+      return;
+    }
+
+    if (!checkInDate) {
+      toast.error("Please select check-in date");
+      return;
+    }
+
+    if (!checkOutDate) {
+      toast.error("Please select check-out date");
+      return;
+    }
+
+    if (new Date(checkOutDate) <= new Date(checkInDate)) {
+      toast.error("Check-out date must be after check-in date");
+      return;
+    }
+
     const params = new URLSearchParams();
 
-    if (destination) params.set("destination", destination);
-    if (checkInDate) params.set("checkInDate", checkInDate);
-    if (checkOutDate) params.set("checkOutDate", checkOutDate);
-    if (guests) params.set("guests", guests);
+    params.set("destination", destination.trim().toLowerCase());
+    params.set("checkInDate", checkInDate);
+    params.set("checkOutDate", checkOutDate);
+    params.set("guests", String(guests));
 
     navigate(`/rooms?${params.toString()}`);
 
@@ -71,7 +92,7 @@ const Hero = () => {
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             required
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full text-gray-700"
             placeholder="Lagos, Abuja, Kano..."
           />
 
@@ -85,12 +106,7 @@ const Hero = () => {
         {/* CHECK IN */}
         <div>
           <div className="flex items-center gap-2">
-            <img
-              src={assets.calenderIcon}
-              alt="calendar"
-              className="h-4"
-            />
-
+            <img src={assets.calenderIcon} alt="calendar" className="h-4" />
             <label htmlFor="checkIn">Check in</label>
           </div>
 
@@ -99,20 +115,25 @@ const Hero = () => {
             type="date"
             value={checkInDate}
             min={today}
-            onChange={(e) => setCheckInDate(e.target.value)}
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
+            onChange={(e) => {
+              setCheckInDate(e.target.value);
+
+              if (
+                checkOutDate &&
+                new Date(checkOutDate) <= new Date(e.target.value)
+              ) {
+                setCheckOutDate("");
+              }
+            }}
+            required
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full text-gray-700"
           />
         </div>
 
         {/* CHECK OUT */}
         <div>
           <div className="flex items-center gap-2">
-            <img
-              src={assets.calenderIcon}
-              alt="calendar"
-              className="h-4"
-            />
-
+            <img src={assets.calenderIcon} alt="calendar" className="h-4" />
             <label htmlFor="checkOut">Check out</label>
           </div>
 
@@ -122,7 +143,8 @@ const Hero = () => {
             value={checkOutDate}
             min={checkInDate || today}
             onChange={(e) => setCheckOutDate(e.target.value)}
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full"
+            required
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none w-full text-gray-700"
           />
         </div>
 
@@ -136,8 +158,9 @@ const Hero = () => {
             min={1}
             max={10}
             value={guests}
-            onChange={(e) => setGuests(e.target.value)}
-            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none max-w-24"
+            onChange={(e) => setGuests(Number(e.target.value))}
+            required
+            className="rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none max-w-24 text-gray-700"
           />
         </div>
 
