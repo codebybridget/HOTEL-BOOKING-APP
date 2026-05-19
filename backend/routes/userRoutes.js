@@ -1,6 +1,6 @@
 import express from "express";
 import { requireAuth } from "@clerk/express";
-import { protect } from "../middleware/authMiddleware.js";
+
 import {
   getUserData,
   setUserRole,
@@ -8,13 +8,8 @@ import {
 
 const userRouter = express.Router();
 
-userRouter.get("/", requireAuth(), protect, getUserData);
+userRouter.get("/", requireAuth(), getUserData);
 
-userRouter.post(
-  "/set-role",
-  requireAuth(),
-  protect,
-  setUserRole
-);
+userRouter.post("/set-role", requireAuth(), setUserRole);
 
 export default userRouter;
