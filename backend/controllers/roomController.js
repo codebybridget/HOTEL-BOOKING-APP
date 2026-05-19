@@ -1,4 +1,3 @@
-import fs from "fs";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import { cloudinary } from "../configs/cloudinary.js";
@@ -10,7 +9,10 @@ export const createRoom = async (req, res) => {
     const { roomType, pricePerNight, amenities } = req.body;
 
     if (!ownerId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
     if (!roomType || !pricePerNight || !amenities) {
@@ -67,11 +69,25 @@ export const createRoom = async (req, res) => {
 
     try {
       const results = await Promise.all(
-        req.files.map((file) =>
-          cloudinary.uploader.upload(file.path, {
-            folder: "hotel_rooms",
-            resource_type: "image",
-          })
+        req.files.map(
+          (file) =>
+            new Promise((resolve, reject) => {
+              const stream = cloudinary.uploader.upload_stream(
+                {
+                  folder: "hotel_rooms",
+                  resource_type: "image",
+                },
+                (error, result) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result);
+                  }
+                }
+              );
+
+              stream.end(file.buffer);
+            })
         )
       );
 
@@ -82,12 +98,6 @@ export const createRoom = async (req, res) => {
       return res.status(500).json({
         success: false,
         message: "Image upload failed",
-      });
-    } finally {
-      req.files.forEach((file) => {
-        if (file.path && fs.existsSync(file.path)) {
-          fs.unlinkSync(file.path);
-        }
       });
     }
 
@@ -142,7 +152,10 @@ export const getOwnerRooms = async (req, res) => {
     const ownerId = req.auth?.userId;
 
     if (!ownerId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
     const hotel = await Hotel.findOne({ owner: ownerId });
@@ -176,10 +189,13 @@ export const getOwnerRooms = async (req, res) => {
 export const toggleRoomAvailability = async (req, res) => {
   try {
     const ownerId = req.auth?.userId;
-    const { roomId } = req.body;
+    const roomId = req.params.id || req.body.roomId;
 
     if (!ownerId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
     if (!roomId) {

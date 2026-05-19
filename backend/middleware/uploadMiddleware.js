@@ -1,9 +1,9 @@
 import multer from "multer";
 
-// Temporary storage for Cloudinary uploads
-const storage = multer.diskStorage({});
+// Use memory storage for Render + Cloudinary
+const storage = multer.memoryStorage();
 
-// Allow only image files
+// Allow images only
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -14,12 +14,10 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-
   fileFilter,
-
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 10, // Max 10 images
+    fileSize: 5 * 1024 * 1024,
+    files: 4,
   },
 });
 
