@@ -1,14 +1,32 @@
-import express from "express";
-import { requireAuth } from "@clerk/express";
-import {
-  getUserData,
-  setUserRole,
-} from "../controllers/userController.js";
+import User from "../models/User.js";
 
-const userRouter = express.Router();
+export const protect = async (req, res, next) => {
+  try {
+    const userId = req.auth?.userId;
 
-userRouter.get("/", requireAuth(), getUserData);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-userRouter.post("/set-role", requireAuth(), setUserRole);
+    const user = await User.findById(userId);
 
-export default userRouter;
+    if (!user) {
+      req.user = null;
+      return next();
+    }
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    console.error("Protect middleware error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
