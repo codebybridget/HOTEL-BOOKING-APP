@@ -16,8 +16,16 @@ const AddRoom = () => {
   const { axios } = useAppContext();
 
   const [hotel, setHotel] = useState(null);
+  const [showEditHotel, setShowEditHotel] = useState(false);
 
   const [hotelForm, setHotelForm] = useState({
+    name: "",
+    address: "",
+    contact: "",
+    city: "",
+  });
+
+  const [editHotelForm, setEditHotelForm] = useState({
     name: "",
     address: "",
     contact: "",
@@ -48,7 +56,7 @@ const AddRoom = () => {
         if (data?.success) {
           setHotel(data.hotel);
         }
-      } catch (error) {
+      } catch {
         setHotel(null);
       }
     };
@@ -72,6 +80,28 @@ const AddRoom = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to register hotel");
+    } finally {
+      setHotelLoading(false);
+    }
+  };
+
+  const handleUpdateHotel = async (e) => {
+    e.preventDefault();
+
+    try {
+      setHotelLoading(true);
+
+      const { data } = await axios.patch("/api/hotels/owner", editHotelForm);
+
+      if (data?.success) {
+        setHotel(data.hotel);
+        setShowEditHotel(false);
+        toast.success("Hotel updated successfully");
+      } else {
+        toast.error(data?.message || "Failed to update hotel");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Update failed");
     } finally {
       setHotelLoading(false);
     }
@@ -154,7 +184,7 @@ const AddRoom = () => {
         align="left"
         font="outfit"
         title="Add Room"
-        subTitle="Register your hotel, then upload room details."
+        subTitle="Register your hotel, update details, then upload room images."
       />
 
       {!hotel && (
@@ -254,26 +284,135 @@ const AddRoom = () => {
       {hotel && (
         <>
           <div className="bg-white border rounded-2xl p-6 mt-8 shadow-sm mb-10">
-            <div className="flex items-center gap-5">
-              <img
-                src={hotel?.images?.[0] || assets.roomImg}
-                alt="hotel"
-                className="w-28 h-28 rounded-xl object-cover"
-              />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex items-center gap-5">
+                <img
+                  src={hotel?.images?.[0] || assets.roomImg}
+                  alt="hotel"
+                  className="w-28 h-28 rounded-xl object-cover border"
+                />
 
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {hotel.name}
-                </h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {hotel.name}
+                  </h2>
 
-                <p className="text-gray-500 mt-2">{hotel.address}</p>
-                <p className="text-gray-500 mt-1">{hotel.contact}</p>
+                  <p className="text-gray-500 mt-2">{hotel.address}</p>
+                  <p className="text-gray-500 mt-1">{hotel.contact}</p>
 
-                <span className="inline-block mt-3 bg-[#eef9ff] text-[#00ADEF] px-4 py-1 rounded-full text-sm font-medium capitalize">
-                  {hotel.city}
-                </span>
+                  <span className="inline-block mt-3 bg-[#eef9ff] text-[#00ADEF] px-4 py-1 rounded-full text-sm font-medium capitalize">
+                    {hotel.city}
+                  </span>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditHotel(!showEditHotel);
+
+                  setEditHotelForm({
+                    name: hotel.name || "",
+                    address: hotel.address || "",
+                    contact: hotel.contact || "",
+                    city: hotel.city || "",
+                  });
+                }}
+                className="bg-black text-white px-5 py-3 rounded-xl"
+              >
+                {showEditHotel ? "Close Form" : "Edit Hotel"}
+              </button>
             </div>
+
+            {showEditHotel && (
+              <form
+                onSubmit={handleUpdateHotel}
+                className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8"
+              >
+                <div>
+                  <p className="mb-2 font-medium">Hotel Name</p>
+
+                  <input
+                    type="text"
+                    value={editHotelForm.name}
+                    onChange={(e) =>
+                      setEditHotelForm((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="border p-4 rounded-xl w-full"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <p className="mb-2 font-medium">Phone Number</p>
+
+                  <input
+                    type="text"
+                    value={editHotelForm.contact}
+                    onChange={(e) =>
+                      setEditHotelForm((prev) => ({
+                        ...prev,
+                        contact: e.target.value,
+                      }))
+                    }
+                    className="border p-4 rounded-xl w-full"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <p className="mb-2 font-medium">State / Location</p>
+
+                  <select
+                    value={editHotelForm.city}
+                    onChange={(e) =>
+                      setEditHotelForm((prev) => ({
+                        ...prev,
+                        city: e.target.value,
+                      }))
+                    }
+                    className="border p-4 rounded-xl w-full"
+                    required
+                  >
+                    <option value="">Select State</option>
+
+                    {cities.map((city) => (
+                      <option key={city} value={city.toLowerCase()}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <p className="mb-2 font-medium">Hotel Address</p>
+
+                  <input
+                    type="text"
+                    value={editHotelForm.address}
+                    onChange={(e) =>
+                      setEditHotelForm((prev) => ({
+                        ...prev,
+                        address: e.target.value,
+                      }))
+                    }
+                    className="border p-4 rounded-xl w-full"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={hotelLoading}
+                  className="bg-[#00ADEF] text-white px-6 py-3 rounded-xl w-fit disabled:opacity-50"
+                >
+                  {hotelLoading ? "Saving..." : "Save Changes"}
+                </button>
+              </form>
+            )}
           </div>
 
           <form onSubmit={handleSubmit}>
