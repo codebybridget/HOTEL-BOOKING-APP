@@ -1,4 +1,22 @@
 import Hotel from "../models/Hotel.js";
+import { cloudinary } from "../configs/cloudinary.js";
+
+const uploadToCloudinary = (file) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "hotels",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    stream.end(file.buffer);
+  });
+};
 
 // REGISTER HOTEL
 export const registerHotel = async (req, res) => {
@@ -45,12 +63,20 @@ export const registerHotel = async (req, res) => {
       });
     }
 
+    let images = [];
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file);
+      images = [result.secure_url];
+    }
+
     const hotel = await Hotel.create({
       owner: ownerId,
       name,
       address,
       contact,
       city,
+      images,
     });
 
     return res.status(201).json({
@@ -63,7 +89,7 @@ export const registerHotel = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to register hotel",
+      message: error.message || "Failed to register hotel",
     });
   }
 };
@@ -138,15 +164,22 @@ export const updateOwnerHotel = async (req, res) => {
       });
     }
 
+    const updateData = {
+      name,
+      address,
+      contact,
+      city,
+    };
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file);
+      updateData.images = [result.secure_url];
+    }
+
     const hotel = await Hotel.findOneAndUpdate(
       { owner: ownerId },
       {
-        $set: {
-          name,
-          address,
-          contact,
-          city,
-        },
+        $set: updateData,
       },
       {
         new: true,
@@ -171,7 +204,7 @@ export const updateOwnerHotel = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to update hotel",
+      message: error.message || "Failed to update hotel",
     });
   }
 };

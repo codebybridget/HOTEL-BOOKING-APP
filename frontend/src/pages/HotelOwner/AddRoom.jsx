@@ -16,21 +16,28 @@ const AddRoom = () => {
   const { axios } = useAppContext();
 
   const [hotel, setHotel] = useState(null);
-  const [showEditHotel, setShowEditHotel] = useState(false);
 
-  const [hotelForm, setHotelForm] = useState({
-    name: "",
-    address: "",
-    contact: "",
-    city: "",
-  });
+  const [showEditHotel, setShowEditHotel] =
+    useState(false);
 
-  const [editHotelForm, setEditHotelForm] = useState({
-    name: "",
-    address: "",
-    contact: "",
-    city: "",
-  });
+  const [hotelImage, setHotelImage] =
+    useState(null);
+
+  const [hotelForm, setHotelForm] =
+    useState({
+      name: "",
+      address: "",
+      contact: "",
+      city: "",
+    });
+
+  const [editHotelForm, setEditHotelForm] =
+    useState({
+      name: "",
+      address: "",
+      contact: "",
+      city: "",
+    });
 
   const [images, setImages] = useState({
     1: null,
@@ -45,13 +52,20 @@ const AddRoom = () => {
     amenities: initialAmenities,
   });
 
-  const [loading, setLoading] = useState(false);
-  const [hotelLoading, setHotelLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
+  const [hotelLoading, setHotelLoading] =
+    useState(false);
+
+  // FETCH HOTEL
   useEffect(() => {
     const fetchHotel = async () => {
       try {
-        const { data } = await axios.get("/api/hotels/owner");
+        const { data } =
+          await axios.get(
+            "/api/hotels/owner"
+          );
 
         if (data?.success) {
           setHotel(data.hotel);
@@ -64,56 +78,166 @@ const AddRoom = () => {
     fetchHotel();
   }, [axios]);
 
-  const handleRegisterHotel = async (e) => {
-    e.preventDefault();
+  // REGISTER HOTEL
+  const handleRegisterHotel =
+    async (e) => {
+      e.preventDefault();
 
-    try {
-      setHotelLoading(true);
+      try {
+        setHotelLoading(true);
 
-      const { data } = await axios.post("/api/hotels", hotelForm);
+        const formData =
+          new FormData();
 
-      if (data?.success) {
-        setHotel(data.hotel);
-        toast.success("Hotel registered successfully");
-      } else {
-        toast.error(data?.message || "Failed to register hotel");
+        formData.append(
+          "name",
+          hotelForm.name
+        );
+
+        formData.append(
+          "address",
+          hotelForm.address
+        );
+
+        formData.append(
+          "contact",
+          hotelForm.contact
+        );
+
+        formData.append(
+          "city",
+          hotelForm.city
+        );
+
+        if (hotelImage) {
+          formData.append(
+            "image",
+            hotelImage
+          );
+        }
+
+        const { data } =
+          await axios.post(
+            "/api/hotels",
+            formData,
+            {
+              headers: {
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            }
+          );
+
+        if (data?.success) {
+          setHotel(data.hotel);
+
+          toast.success(
+            "Hotel registered successfully"
+          );
+        } else {
+          toast.error(
+            data?.message ||
+              "Failed to register hotel"
+          );
+        }
+      } catch (error) {
+        toast.error(
+          error.response?.data
+            ?.message ||
+            "Failed to register hotel"
+        );
+      } finally {
+        setHotelLoading(false);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to register hotel");
-    } finally {
-      setHotelLoading(false);
-    }
-  };
+    };
 
-  const handleUpdateHotel = async (e) => {
-    e.preventDefault();
+  // UPDATE HOTEL
+  const handleUpdateHotel =
+    async (e) => {
+      e.preventDefault();
 
-    try {
-      setHotelLoading(true);
+      try {
+        setHotelLoading(true);
 
-      const { data } = await axios.patch("/api/hotels/owner", editHotelForm);
+        const formData =
+          new FormData();
 
-      if (data?.success) {
-        setHotel(data.hotel);
-        setShowEditHotel(false);
-        toast.success("Hotel updated successfully");
-      } else {
-        toast.error(data?.message || "Failed to update hotel");
+        formData.append(
+          "name",
+          editHotelForm.name
+        );
+
+        formData.append(
+          "address",
+          editHotelForm.address
+        );
+
+        formData.append(
+          "contact",
+          editHotelForm.contact
+        );
+
+        formData.append(
+          "city",
+          editHotelForm.city
+        );
+
+        if (hotelImage) {
+          formData.append(
+            "image",
+            hotelImage
+          );
+        }
+
+        const { data } =
+          await axios.patch(
+            "/api/hotels/owner",
+            formData,
+            {
+              headers: {
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            }
+          );
+
+        if (data?.success) {
+          setHotel(data.hotel);
+
+          setShowEditHotel(false);
+
+          toast.success(
+            "Hotel updated successfully"
+          );
+        } else {
+          toast.error(
+            data?.message ||
+              "Failed to update hotel"
+          );
+        }
+      } catch (error) {
+        toast.error(
+          error.response?.data
+            ?.message ||
+            "Update failed"
+        );
+      } finally {
+        setHotelLoading(false);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Update failed");
-    } finally {
-      setHotelLoading(false);
-    }
-  };
+    };
 
-  const handleImageChange = (key, file) => {
+  // ROOM IMAGE
+  const handleImageChange = (
+    key,
+    file
+  ) => {
     setImages((prev) => ({
       ...prev,
       [key]: file,
     }));
   };
 
+  // ADD ROOM
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -121,48 +245,97 @@ const AddRoom = () => {
       setLoading(true);
 
       if (!hotel) {
-        toast.error("Please register your hotel first");
+        toast.error(
+          "Please register your hotel first"
+        );
+
         return;
       }
 
-      const uploadedImages = Object.values(images).filter(Boolean);
+      const uploadedImages =
+        Object.values(images).filter(
+          Boolean
+        );
 
-      if (uploadedImages.length === 0) {
-        toast.error("Please upload at least one image");
+      if (
+        uploadedImages.length === 0
+      ) {
+        toast.error(
+          "Please upload at least one image"
+        );
+
         return;
       }
 
-      const amenitiesArray = Object.keys(inputs.amenities).filter(
-        (key) => inputs.amenities[key]
+      const amenitiesArray =
+        Object.keys(
+          inputs.amenities
+        ).filter(
+          (key) =>
+            inputs.amenities[key]
+        );
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "roomType",
+        inputs.roomType
       );
 
-      const formData = new FormData();
+      formData.append(
+        "pricePerNight",
+        Number(
+          inputs.pricePerNight
+        )
+      );
 
-      formData.append("roomType", inputs.roomType);
-      formData.append("pricePerNight", Number(inputs.pricePerNight));
-      formData.append("amenities", JSON.stringify(amenitiesArray));
+      formData.append(
+        "amenities",
+        JSON.stringify(
+          amenitiesArray
+        )
+      );
 
-      uploadedImages.forEach((image) => {
-        formData.append("images", image);
-      });
+      uploadedImages.forEach(
+        (image) => {
+          formData.append(
+            "images",
+            image
+          );
+        }
+      );
 
-      const { data } = await axios.post("/api/rooms", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const { data } =
+        await axios.post(
+          "/api/rooms",
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
 
       if (!data?.success) {
-        toast.error(data?.message || "Failed to add room");
+        toast.error(
+          data?.message ||
+            "Failed to add room"
+        );
+
         return;
       }
 
-      toast.success("Room added successfully");
+      toast.success(
+        "Room added successfully"
+      );
 
       setInputs({
         roomType: "",
         pricePerNight: "",
-        amenities: initialAmenities,
+        amenities:
+          initialAmenities,
       });
 
       setImages({
@@ -172,7 +345,11 @@ const AddRoom = () => {
         4: null,
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Upload failed");
+      toast.error(
+        error.response?.data
+          ?.message ||
+          "Upload failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -184,29 +361,72 @@ const AddRoom = () => {
         align="left"
         font="outfit"
         title="Add Room"
-        subTitle="Register your hotel, update details, then upload room images."
+        subTitle="Register your hotel and upload rooms."
       />
 
+      {/* REGISTER HOTEL */}
       {!hotel && (
         <form
-          onSubmit={handleRegisterHotel}
+          onSubmit={
+            handleRegisterHotel
+          }
           className="bg-white border rounded-2xl p-8 mt-8 shadow-sm mb-10"
         >
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
             Register Hotel
           </h2>
 
+          {/* HOTEL IMAGE */}
+          <div className="mb-8">
+            <p className="mb-3 font-medium">
+              Hotel Image
+            </p>
+
+            <label className="cursor-pointer">
+              <img
+                src={
+                  hotelImage
+                    ? URL.createObjectURL(
+                        hotelImage
+                      )
+                    : assets.uploadArea
+                }
+                alt="upload"
+                className="w-40 h-40 object-cover rounded-2xl border"
+              />
+
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={(e) =>
+                  setHotelImage(
+                    e.target.files[0]
+                  )
+                }
+              />
+            </label>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <p className="mb-2 font-medium">Hotel Name</p>
+              <p className="mb-2 font-medium">
+                Hotel Name
+              </p>
+
               <input
                 type="text"
-                value={hotelForm.name}
+                value={
+                  hotelForm.name
+                }
                 onChange={(e) =>
-                  setHotelForm((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
+                  setHotelForm(
+                    (prev) => ({
+                      ...prev,
+                      name:
+                        e.target.value,
+                    })
+                  )
                 }
                 placeholder="Eko Hotel"
                 className="border p-4 rounded-xl w-full"
@@ -215,15 +435,23 @@ const AddRoom = () => {
             </div>
 
             <div>
-              <p className="mb-2 font-medium">Phone Number</p>
+              <p className="mb-2 font-medium">
+                Phone Number
+              </p>
+
               <input
                 type="text"
-                value={hotelForm.contact}
+                value={
+                  hotelForm.contact
+                }
                 onChange={(e) =>
-                  setHotelForm((prev) => ({
-                    ...prev,
-                    contact: e.target.value,
-                  }))
+                  setHotelForm(
+                    (prev) => ({
+                      ...prev,
+                      contact:
+                        e.target.value,
+                    })
+                  )
                 }
                 placeholder="+234..."
                 className="border p-4 rounded-xl w-full"
@@ -232,37 +460,61 @@ const AddRoom = () => {
             </div>
 
             <div>
-              <p className="mb-2 font-medium">State / Location</p>
+              <p className="mb-2 font-medium">
+                State / Location
+              </p>
+
               <select
-                value={hotelForm.city}
+                value={
+                  hotelForm.city
+                }
                 onChange={(e) =>
-                  setHotelForm((prev) => ({
-                    ...prev,
-                    city: e.target.value,
-                  }))
+                  setHotelForm(
+                    (prev) => ({
+                      ...prev,
+                      city:
+                        e.target.value,
+                    })
+                  )
                 }
                 className="border p-4 rounded-xl w-full"
                 required
               >
-                <option value="">Select State</option>
-                {cities.map((city) => (
-                  <option key={city} value={city.toLowerCase()}>
-                    {city}
-                  </option>
-                ))}
+                <option value="">
+                  Select State
+                </option>
+
+                {cities.map(
+                  (city) => (
+                    <option
+                      key={city}
+                      value={city.toLowerCase()}
+                    >
+                      {city}
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
             <div>
-              <p className="mb-2 font-medium">Hotel Address</p>
+              <p className="mb-2 font-medium">
+                Hotel Address
+              </p>
+
               <input
                 type="text"
-                value={hotelForm.address}
+                value={
+                  hotelForm.address
+                }
                 onChange={(e) =>
-                  setHotelForm((prev) => ({
-                    ...prev,
-                    address: e.target.value,
-                  }))
+                  setHotelForm(
+                    (prev) => ({
+                      ...prev,
+                      address:
+                        e.target.value,
+                    })
+                  )
                 }
                 placeholder="Hotel address"
                 className="border p-4 rounded-xl w-full"
@@ -273,21 +525,29 @@ const AddRoom = () => {
 
           <button
             type="submit"
-            disabled={hotelLoading}
+            disabled={
+              hotelLoading
+            }
             className="bg-black text-white px-8 py-3 rounded-xl mt-6 disabled:opacity-50"
           >
-            {hotelLoading ? "Registering..." : "Register Hotel"}
+            {hotelLoading
+              ? "Registering..."
+              : "Register Hotel"}
           </button>
         </form>
       )}
 
+      {/* HOTEL CARD */}
       {hotel && (
         <>
           <div className="bg-white border rounded-2xl p-6 mt-8 shadow-sm mb-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-center gap-5">
                 <img
-                  src={hotel?.images?.[0] || assets.roomImg}
+                  src={
+                    hotel?.images?.[0] ||
+                    assets.roomImg
+                  }
                   alt="hotel"
                   className="w-28 h-28 rounded-xl object-cover border"
                 />
@@ -297,8 +557,13 @@ const AddRoom = () => {
                     {hotel.name}
                   </h2>
 
-                  <p className="text-gray-500 mt-2">{hotel.address}</p>
-                  <p className="text-gray-500 mt-1">{hotel.contact}</p>
+                  <p className="text-gray-500 mt-2">
+                    {hotel.address}
+                  </p>
+
+                  <p className="text-gray-500 mt-1">
+                    {hotel.contact}
+                  </p>
 
                   <span className="inline-block mt-3 bg-[#eef9ff] text-[#00ADEF] px-4 py-1 rounded-full text-sm font-medium capitalize">
                     {hotel.city}
@@ -309,37 +574,100 @@ const AddRoom = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setShowEditHotel(!showEditHotel);
+                  setShowEditHotel(
+                    !showEditHotel
+                  );
 
                   setEditHotelForm({
-                    name: hotel.name || "",
-                    address: hotel.address || "",
-                    contact: hotel.contact || "",
-                    city: hotel.city || "",
+                    name:
+                      hotel.name ||
+                      "",
+
+                    address:
+                      hotel.address ||
+                      "",
+
+                    contact:
+                      hotel.contact ||
+                      "",
+
+                    city:
+                      hotel.city ||
+                      "",
                   });
                 }}
                 className="bg-black text-white px-5 py-3 rounded-xl"
               >
-                {showEditHotel ? "Close Form" : "Edit Hotel"}
+                {showEditHotel
+                  ? "Close Form"
+                  : "Edit Hotel"}
               </button>
             </div>
 
+            {/* EDIT FORM */}
             {showEditHotel && (
               <form
-                onSubmit={handleUpdateHotel}
+                onSubmit={
+                  handleUpdateHotel
+                }
                 className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8"
               >
+                {/* IMAGE */}
+                <div className="md:col-span-2">
+                  <p className="mb-3 font-medium">
+                    Hotel Image
+                  </p>
+
+                  <label className="cursor-pointer">
+                    <img
+                      src={
+                        hotelImage
+                          ? URL.createObjectURL(
+                              hotelImage
+                            )
+                          : hotel
+                              ?.images?.[0] ||
+                            assets.uploadArea
+                      }
+                      alt="hotel"
+                      className="w-40 h-40 object-cover rounded-2xl border"
+                    />
+
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(
+                        e
+                      ) =>
+                        setHotelImage(
+                          e.target
+                            .files[0]
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+
                 <div>
-                  <p className="mb-2 font-medium">Hotel Name</p>
+                  <p className="mb-2 font-medium">
+                    Hotel Name
+                  </p>
 
                   <input
                     type="text"
-                    value={editHotelForm.name}
+                    value={
+                      editHotelForm.name
+                    }
                     onChange={(e) =>
-                      setEditHotelForm((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
+                      setEditHotelForm(
+                        (prev) => ({
+                          ...prev,
+                          name:
+                            e.target
+                              .value,
+                        })
+                      )
                     }
                     className="border p-4 rounded-xl w-full"
                     required
@@ -347,16 +675,24 @@ const AddRoom = () => {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">Phone Number</p>
+                  <p className="mb-2 font-medium">
+                    Phone Number
+                  </p>
 
                   <input
                     type="text"
-                    value={editHotelForm.contact}
+                    value={
+                      editHotelForm.contact
+                    }
                     onChange={(e) =>
-                      setEditHotelForm((prev) => ({
-                        ...prev,
-                        contact: e.target.value,
-                      }))
+                      setEditHotelForm(
+                        (prev) => ({
+                          ...prev,
+                          contact:
+                            e.target
+                              .value,
+                        })
+                      )
                     }
                     className="border p-4 rounded-xl w-full"
                     required
@@ -364,40 +700,63 @@ const AddRoom = () => {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">State / Location</p>
+                  <p className="mb-2 font-medium">
+                    State / Location
+                  </p>
 
                   <select
-                    value={editHotelForm.city}
+                    value={
+                      editHotelForm.city
+                    }
                     onChange={(e) =>
-                      setEditHotelForm((prev) => ({
-                        ...prev,
-                        city: e.target.value,
-                      }))
+                      setEditHotelForm(
+                        (prev) => ({
+                          ...prev,
+                          city:
+                            e.target
+                              .value,
+                        })
+                      )
                     }
                     className="border p-4 rounded-xl w-full"
                     required
                   >
-                    <option value="">Select State</option>
+                    <option value="">
+                      Select State
+                    </option>
 
-                    {cities.map((city) => (
-                      <option key={city} value={city.toLowerCase()}>
-                        {city}
-                      </option>
-                    ))}
+                    {cities.map(
+                      (city) => (
+                        <option
+                          key={city}
+                          value={city.toLowerCase()}
+                        >
+                          {city}
+                        </option>
+                      )
+                    )}
                   </select>
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">Hotel Address</p>
+                  <p className="mb-2 font-medium">
+                    Hotel Address
+                  </p>
 
                   <input
                     type="text"
-                    value={editHotelForm.address}
+                    value={
+                      editHotelForm.address
+                    }
                     onChange={(e) =>
-                      setEditHotelForm((prev) => ({
-                        ...prev,
-                        address: e.target.value,
-                      }))
+                      setEditHotelForm(
+                        (prev) => ({
+                          ...prev,
+                          address:
+                            e.target
+                              .value,
+                        })
+                      )
                     }
                     className="border p-4 rounded-xl w-full"
                     required
@@ -406,78 +765,131 @@ const AddRoom = () => {
 
                 <button
                   type="submit"
-                  disabled={hotelLoading}
+                  disabled={
+                    hotelLoading
+                  }
                   className="bg-[#00ADEF] text-white px-6 py-3 rounded-xl w-fit disabled:opacity-50"
                 >
-                  {hotelLoading ? "Saving..." : "Save Changes"}
+                  {hotelLoading
+                    ? "Saving..."
+                    : "Save Changes"}
                 </button>
               </form>
             )}
           </div>
 
-          <form onSubmit={handleSubmit}>
+          {/* ROOM FORM */}
+          <form
+            onSubmit={handleSubmit}
+          >
             <p className="text-gray-800 mt-6 font-medium text-lg">
               Room Images
             </p>
 
             <div className="grid grid-cols-2 sm:flex gap-4 my-4 flex-wrap">
-              {Object.keys(images).map((key) => (
-                <label key={key}>
-                  <img
-                    className="h-36 w-36 object-cover cursor-pointer rounded-2xl border border-gray-300"
-                    src={
-                      images[key]
-                        ? URL.createObjectURL(images[key])
-                        : assets.uploadArea
-                    }
-                    alt="upload"
-                  />
+              {Object.keys(images).map(
+                (key) => (
+                  <label
+                    key={key}
+                  >
+                    <img
+                      className="h-36 w-36 object-cover cursor-pointer rounded-2xl border border-gray-300"
+                      src={
+                        images[key]
+                          ? URL.createObjectURL(
+                              images[
+                                key
+                              ]
+                            )
+                          : assets.uploadArea
+                      }
+                      alt="upload"
+                    />
 
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(key, e.target.files[0])}
-                  />
-                </label>
-              ))}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(
+                        e
+                      ) =>
+                        handleImageChange(
+                          key,
+                          e.target
+                            .files[0]
+                        )
+                      }
+                    />
+                  </label>
+                )
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 mt-8">
               <div>
-                <p className="mb-2 font-medium">Room Type</p>
+                <p className="mb-2 font-medium">
+                  Room Type
+                </p>
 
                 <select
-                  value={inputs.roomType}
+                  value={
+                    inputs.roomType
+                  }
                   onChange={(e) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      roomType: e.target.value,
-                    }))
+                    setInputs(
+                      (prev) => ({
+                        ...prev,
+                        roomType:
+                          e.target
+                            .value,
+                      })
+                    )
                   }
                   className="border p-4 rounded-xl w-80"
                   required
                 >
-                  <option value="">Select</option>
-                  <option value="Single Bed">Single Bed</option>
-                  <option value="Double Bed">Double Bed</option>
-                  <option value="Luxury Room">Luxury Room</option>
-                  <option value="Family Suite">Family Suite</option>
+                  <option value="">
+                    Select
+                  </option>
+
+                  <option value="Single Bed">
+                    Single Bed
+                  </option>
+
+                  <option value="Double Bed">
+                    Double Bed
+                  </option>
+
+                  <option value="Luxury Room">
+                    Luxury Room
+                  </option>
+
+                  <option value="Family Suite">
+                    Family Suite
+                  </option>
                 </select>
               </div>
 
               <div>
-                <p className="mb-2 font-medium">Price / Night</p>
+                <p className="mb-2 font-medium">
+                  Price / Night
+                </p>
 
                 <input
                   type="number"
                   min="1"
-                  value={inputs.pricePerNight}
+                  value={
+                    inputs.pricePerNight
+                  }
                   onChange={(e) =>
-                    setInputs((prev) => ({
-                      ...prev,
-                      pricePerNight: e.target.value,
-                    }))
+                    setInputs(
+                      (prev) => ({
+                        ...prev,
+                        pricePerNight:
+                          e.target
+                            .value,
+                      })
+                    )
                   }
                   className="border p-4 rounded-xl w-80"
                   placeholder="50000"
@@ -486,29 +898,49 @@ const AddRoom = () => {
               </div>
             </div>
 
-            <p className="mt-10 mb-4 font-medium text-lg">Amenities</p>
+            <p className="mt-10 mb-4 font-medium text-lg">
+              Amenities
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.keys(inputs.amenities).map((amenity) => (
+              {Object.keys(
+                inputs.amenities
+              ).map((amenity) => (
                 <label
                   key={amenity}
                   className="flex items-center gap-3 bg-white border rounded-xl px-5 py-4"
                 >
                   <input
                     type="checkbox"
-                    checked={inputs.amenities[amenity]}
+                    checked={
+                      inputs
+                        .amenities[
+                        amenity
+                      ]
+                    }
                     onChange={() =>
-                      setInputs((prev) => ({
-                        ...prev,
-                        amenities: {
-                          ...prev.amenities,
-                          [amenity]: !prev.amenities[amenity],
-                        },
-                      }))
+                      setInputs(
+                        (
+                          prev
+                        ) => ({
+                          ...prev,
+                          amenities:
+                            {
+                              ...prev.amenities,
+                              [amenity]:
+                                !prev
+                                  .amenities[
+                                  amenity
+                                ],
+                            },
+                        })
+                      )
                     }
                   />
 
-                  <span className="text-gray-700">{amenity}</span>
+                  <span className="text-gray-700">
+                    {amenity}
+                  </span>
                 </label>
               ))}
             </div>
@@ -518,7 +950,9 @@ const AddRoom = () => {
               disabled={loading}
               className="bg-[#00ADEF] hover:bg-[#0094cc] text-white px-10 py-4 mt-10 rounded-xl font-semibold transition disabled:opacity-50"
             >
-              {loading ? "Uploading..." : "Add Room"}
+              {loading
+                ? "Uploading..."
+                : "Add Room"}
             </button>
           </form>
         </>

@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middleware/uploadMiddleware.js";
 
 import {
   registerHotel,
@@ -8,17 +9,21 @@ import {
 
 const hotelRouter = express.Router();
 
-/* =========================
-   HOTEL ROUTES
-========================= */
+hotelRouter.post(
+  "/",
+  upload.single("image"),
+  registerHotel
+);
 
-// Register hotel
-hotelRouter.post("/", registerHotel);
+hotelRouter.get(
+  "/owner",
+  getOwnerHotel
+);
 
-// Get current owner's hotel
-hotelRouter.get("/owner", getOwnerHotel);
-
-// Update hotel details
-hotelRouter.patch("/owner", updateOwnerHotel);
+hotelRouter.patch(
+  "/owner",
+  upload.single("image"),
+  updateOwnerHotel
+);
 
 export default hotelRouter;
