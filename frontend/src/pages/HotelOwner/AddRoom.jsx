@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
+
 import Title from "../../components/Title";
 import { assets } from "../../assets/assets";
 import { toast } from "react-hot-toast";
@@ -15,25 +19,64 @@ const initialAmenities = {
 const AddRoom = () => {
   const { axios } = useAppContext();
 
-  const [images, setImages] = useState({
-    1: null,
-    2: null,
-    3: null,
-    4: null,
-  });
+  const [hotel, setHotel] =
+    useState(null);
 
-  const [inputs, setInputs] = useState({
-    roomType: "",
-    pricePerNight: "",
-    amenities: initialAmenities,
-  });
+  const [images, setImages] =
+    useState({
+      1: null,
+      2: null,
+      3: null,
+      4: null,
+    });
 
-  const [loading, setLoading] = useState(false);
+  const [inputs, setInputs] =
+    useState({
+      roomType: "",
+      pricePerNight: "",
+      amenities:
+        initialAmenities,
+    });
+
+  const [loading, setLoading] =
+    useState(false);
 
   // =========================
-  // HANDLE IMAGE CHANGE
+  // FETCH OWNER HOTEL
   // =========================
-  const handleImageChange = (key, file) => {
+  useEffect(() => {
+    const fetchHotel =
+      async () => {
+        try {
+          const { data } =
+            await axios.get(
+              "/api/hotels/owner"
+            );
+
+          console.log(data);
+
+          if (data?.success) {
+            setHotel(data.hotel);
+          }
+        } catch (error) {
+          console.error(
+            "Fetch hotel error:",
+            error.response?.data ||
+              error.message
+          );
+        }
+      };
+
+    fetchHotel();
+  }, [axios]);
+
+  // =========================
+  // IMAGE CHANGE
+  // =========================
+  const handleImageChange = (
+    key,
+    file
+  ) => {
     setImages((prev) => ({
       ...prev,
       [key]: file,
@@ -41,65 +84,100 @@ const AddRoom = () => {
   };
 
   // =========================
-  // HANDLE SUBMIT
+  // SUBMIT
   // =========================
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e
+  ) => {
     e.preventDefault();
 
     try {
       setLoading(true);
 
-      const uploadedImages = Object.values(images).filter(Boolean);
+      const uploadedImages =
+        Object.values(images).filter(
+          Boolean
+        );
 
-      if (uploadedImages.length === 0) {
-        toast.error("Please upload at least one image");
+      if (
+        uploadedImages.length === 0
+      ) {
+        toast.error(
+          "Please upload at least one image"
+        );
+
         return;
       }
 
-      const amenitiesArray = Object.keys(inputs.amenities).filter(
-        (key) => inputs.amenities[key]
+      const amenitiesArray =
+        Object.keys(
+          inputs.amenities
+        ).filter(
+          (key) =>
+            inputs.amenities[key]
+        );
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "roomType",
+        inputs.roomType
       );
-
-      const formData = new FormData();
-
-      formData.append("roomType", inputs.roomType);
 
       formData.append(
         "pricePerNight",
-        Number(inputs.pricePerNight)
+        Number(
+          inputs.pricePerNight
+        )
       );
 
       formData.append(
         "amenities",
-        JSON.stringify(amenitiesArray)
+        JSON.stringify(
+          amenitiesArray
+        )
       );
 
-      uploadedImages.forEach((image) => {
-        formData.append("images", image);
-      });
-
-      const { data } = await axios.post(
-        "/api/rooms",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+      uploadedImages.forEach(
+        (image) => {
+          formData.append(
+            "images",
+            image
+          );
         }
       );
 
+      const { data } =
+        await axios.post(
+          "/api/rooms",
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
+
       if (!data?.success) {
-        toast.error(data?.message || "Failed to add room");
+        toast.error(
+          data?.message ||
+            "Failed to add room"
+        );
+
         return;
       }
 
-      toast.success("Room added successfully");
+      toast.success(
+        "Room added successfully"
+      );
 
-      // RESET FORM
       setInputs({
         roomType: "",
         pricePerNight: "",
-        amenities: initialAmenities,
+        amenities:
+          initialAmenities,
       });
 
       setImages({
@@ -107,15 +185,19 @@ const AddRoom = () => {
         2: null,
         3: null,
         4: null,
+        5: null,
       });
     } catch (error) {
       console.error(
         "Add room error:",
-        error.response?.data || error.message
+        error.response?.data ||
+          error.message
       );
 
       toast.error(
-        error.response?.data?.message || "Upload failed"
+        error.response?.data
+          ?.message ||
+          "Upload failed"
       );
     } finally {
       setLoading(false);
@@ -129,57 +211,102 @@ const AddRoom = () => {
           align="left"
           font="outfit"
           title="Add Room"
-          subTitle="Fill in the details carefully and accurately."
+          subTitle="Fill in room details carefully."
         />
 
-        {/* IMAGES */}
-        <p className="text-gray-800 mt-10">Images</p>
-
-        <div className="grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap">
-          {Object.keys(images).map((key) => (
-            <label key={key}>
+        {/* HOTEL INFO */}
+        {hotel && (
+          <div className="bg-white border rounded-2xl p-6 mt-8 shadow-sm mb-10">
+            <div className="flex items-center gap-5">
               <img
-                className="max-h-32 w-32 object-cover cursor-pointer opacity-80 rounded border"
                 src={
-                  images[key]
-                    ? URL.createObjectURL(images[key])
-                    : assets.uploadArea
+                  hotel?.images?.[0] ||
+                  assets.roomImg
                 }
-                alt="upload"
+                alt="hotel"
+                className="w-28 h-28 rounded-xl object-cover"
               />
 
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) =>
-                  handleImageChange(
-                    key,
-                    e.target.files[0]
-                  )
-                }
-              />
-            </label>
-          ))}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {hotel.name}
+                </h2>
+
+                <p className="text-gray-500 mt-2">
+                  {hotel.address}
+                </p>
+
+                <span className="inline-block mt-3 bg-[#eef9ff] text-[#00ADEF] px-4 py-1 rounded-full text-sm font-medium capitalize">
+                  {hotel.city}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ROOM IMAGES */}
+        <p className="text-gray-800 mt-6 font-medium text-lg">
+          Room Images
+        </p>
+
+        <div className="grid grid-cols-2 sm:flex gap-4 my-4 flex-wrap">
+          {Object.keys(images).map(
+            (key) => (
+              <label key={key}>
+                <img
+                  className="h-36 w-36 object-cover cursor-pointer rounded-2xl border border-gray-300"
+                  src={
+                    images[key]
+                      ? URL.createObjectURL(
+                          images[key]
+                        )
+                      : assets.uploadArea
+                  }
+                  alt="upload"
+                />
+
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleImageChange(
+                      key,
+                      e.target.files[0]
+                    )
+                  }
+                />
+              </label>
+            )
+          )}
         </div>
 
-        {/* ROOM DETAILS */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-6">
+        {/* ROOM TYPE + PRICE */}
+        <div className="flex flex-col sm:flex-row gap-6 mt-8">
           <div>
-            <p className="mb-2">Room Type</p>
+            <p className="mb-2 font-medium">
+              Room Type
+            </p>
 
             <select
-              value={inputs.roomType}
-              onChange={(e) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  roomType: e.target.value,
-                }))
+              value={
+                inputs.roomType
               }
-              className="border p-2 rounded w-52"
+              onChange={(e) =>
+                setInputs(
+                  (prev) => ({
+                    ...prev,
+                    roomType:
+                      e.target.value,
+                  })
+                )
+              }
+              className="border p-4 rounded-xl w-80"
               required
             >
-              <option value="">Select</option>
+              <option value="">
+                Select
+              </option>
 
               <option value="Single Bed">
                 Single Bed
@@ -200,19 +327,26 @@ const AddRoom = () => {
           </div>
 
           <div>
-            <p className="mb-2">Price / Night</p>
+            <p className="mb-2 font-medium">
+              Price / Night
+            </p>
 
             <input
               type="number"
               min="1"
-              value={inputs.pricePerNight}
-              onChange={(e) =>
-                setInputs((prev) => ({
-                  ...prev,
-                  pricePerNight: e.target.value,
-                }))
+              value={
+                inputs.pricePerNight
               }
-              className="border p-2 rounded w-52"
+              onChange={(e) =>
+                setInputs(
+                  (prev) => ({
+                    ...prev,
+                    pricePerNight:
+                      e.target.value,
+                  })
+                )
+              }
+              className="border p-4 rounded-xl w-80"
               placeholder="50000"
               required
             />
@@ -220,49 +354,58 @@ const AddRoom = () => {
         </div>
 
         {/* AMENITIES */}
-        <p className="mt-6 mb-3 text-gray-800">
+        <p className="mt-10 mb-4 font-medium text-lg">
           Amenities
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {Object.keys(inputs.amenities).map(
-            (amenity) => (
-              <label
-                key={amenity}
-                className="flex items-center gap-2"
-              >
-                <input
-                  type="checkbox"
-                  checked={
-                    inputs.amenities[amenity]
-                  }
-                  onChange={() =>
-                    setInputs((prev) => ({
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {Object.keys(
+            inputs.amenities
+          ).map((amenity) => (
+            <label
+              key={amenity}
+              className="flex items-center gap-3 bg-white border rounded-xl px-5 py-4"
+            >
+              <input
+                type="checkbox"
+                checked={
+                  inputs.amenities[
+                    amenity
+                  ]
+                }
+                onChange={() =>
+                  setInputs(
+                    (prev) => ({
                       ...prev,
                       amenities: {
                         ...prev.amenities,
                         [amenity]:
-                          !prev.amenities[
+                          !prev
+                            .amenities[
                             amenity
                           ],
                       },
-                    }))
-                  }
-                />
+                    })
+                  )
+                }
+              />
 
-                <span>{amenity}</span>
-              </label>
-            )
-          )}
+              <span className="text-gray-700">
+                {amenity}
+              </span>
+            </label>
+          ))}
         </div>
 
-        {/* SUBMIT */}
+        {/* BUTTON */}
         <button
           type="submit"
           disabled={loading}
-          className="bg-black text-white px-6 py-2 mt-8 rounded disabled:opacity-50"
+          className="bg-[#00ADEF] hover:bg-[#0094cc] text-white px-10 py-4 mt-10 rounded-xl font-semibold transition"
         >
-          {loading ? "Adding..." : "Add Room"}
+          {loading
+            ? "Uploading..."
+            : "Add Room"}
         </button>
       </form>
     </div>

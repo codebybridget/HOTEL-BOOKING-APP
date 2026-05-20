@@ -141,6 +141,13 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    if (!roomData.hotel) {
+      return res.status(400).json({
+        success: false,
+        message: "Room is not linked to a hotel",
+      });
+    }
+
     if (!roomData.isAvailable) {
       return res.status(400).json({
         success: false,
@@ -190,11 +197,11 @@ export const createBooking = async (req, res) => {
       booking,
     });
   } catch (error) {
-    console.error("Create booking error:", error.message);
+    console.error("Create booking error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to create booking",
+      message: error.message,
     });
   }
 };
@@ -221,11 +228,11 @@ export const getUserBookings = async (req, res) => {
       bookings,
     });
   } catch (error) {
-    console.error("User bookings fetch error:", error.message);
+    console.error("User bookings fetch error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch bookings",
+      message: error.message,
     });
   }
 };
@@ -256,9 +263,14 @@ export const getHotelBookings = async (req, res) => {
     }
 
     const bookings = await Booking.find({ hotel: hotel._id })
+      .populate("user", "username email image")
       .populate("room")
       .populate("hotel")
       .sort({ createdAt: -1 });
+
+    console.log("OWNER ID:", ownerId);
+    console.log("HOTEL ID:", hotel._id);
+    console.log("BOOKINGS FOUND:", bookings.length);
 
     const totalBookings = bookings.length;
 
@@ -276,11 +288,11 @@ export const getHotelBookings = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Hotel booking fetch error:", error.message);
+    console.error("Hotel booking fetch error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch hotel bookings",
+      message: error.message,
     });
   }
 };

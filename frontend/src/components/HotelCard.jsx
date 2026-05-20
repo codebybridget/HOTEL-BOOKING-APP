@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 
-const HotelCard = ({ room, index = 0 }) => {
+const HotelCard = ({ room }) => {
   const { currency } = useAppContext();
 
   const handleClick = () => {
@@ -17,10 +17,10 @@ const HotelCard = ({ room, index = 0 }) => {
     <Link
       to={`/rooms/${room?._id}`}
       onClick={handleClick}
-      className="relative w-full rounded-2xl overflow-hidden bg-white text-gray-600 shadow-sm hover:shadow-xl transition duration-300"
+      className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 border border-gray-100"
     >
       {/* IMAGE */}
-      <div className="overflow-hidden">
+      <div className="relative h-72 overflow-hidden">
         <img
           src={
             room?.images?.[0] ||
@@ -28,61 +28,53 @@ const HotelCard = ({ room, index = 0 }) => {
           }
           alt={
             room?.hotel?.name ||
-            "Hotel room"
+            "Hotel"
           }
-          className="w-full h-56 object-cover hover:scale-105 transition duration-500"
+          className="w-full h-full object-cover hover:scale-105 transition duration-500"
         />
-      </div>
 
-      {/* BADGE */}
-      {index % 2 === 0 && (
-        <span className="absolute top-3 left-3 text-xs bg-white text-gray-800 font-medium px-3 py-1 rounded-full shadow">
-          Best Seller
-        </span>
-      )}
-
-      {/* CONTENT */}
-      <div className="p-4">
-        {/* HOTEL NAME + RATING */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-playfair text-lg font-semibold text-gray-800 line-clamp-1">
-              {room?.hotel?.name ||
-                "Luxury Hotel"}
-            </p>
-
-            <p className="text-sm text-gray-500 mt-1">
-              {room?.roomType ||
-                "Standard Room"}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 text-sm bg-yellow-50 px-2 py-1 rounded">
-            <img
-              src={
-                assets.starIconFilled
-              }
-              alt="rating"
-              className="w-4 h-4"
-            />
-
-            <span className="font-medium text-gray-700">
-              4.5
-            </span>
-          </div>
+        {/* DISCOUNT */}
+        <div className="absolute top-4 left-0 bg-[#00ADEF] text-white px-5 py-2 text-sm font-bold shadow-lg rounded-r-full">
+          Best Deal
         </div>
 
-        {/* LOCATION */}
-        <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+        {/* RATING */}
+        <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full flex items-center gap-1 shadow">
           <img
-            src={
-              assets.locationIcon
-            }
-            alt="location"
+            src={assets.starIconFilled}
+            alt="rating"
             className="w-4 h-4"
           />
 
-          <span className="truncate">
+          <span className="font-semibold text-sm">
+            4.8
+          </span>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="p-6">
+        {/* HOTEL NAME */}
+        <h3 className="text-2xl font-bold text-gray-800 line-clamp-1">
+          {room?.hotel?.name ||
+            "Luxury Hotel"}
+        </h3>
+
+        {/* ROOM TYPE */}
+        <p className="text-lg text-[#00ADEF] mt-2 font-medium">
+          {room?.roomType ||
+            "Executive Room"}
+        </p>
+
+        {/* LOCATION */}
+        <div className="flex items-center gap-2 mt-4 text-gray-500">
+          <img
+            src={assets.locationIcon}
+            alt="location"
+            className="w-5 h-5"
+          />
+
+          <span className="line-clamp-1">
             {room?.hotel?.address ||
               "Nigeria"}
           </span>
@@ -91,13 +83,13 @@ const HotelCard = ({ room, index = 0 }) => {
         {/* AMENITIES */}
         {room?.amenities?.length >
           0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-5">
             {room.amenities
               .slice(0, 3)
-              .map((item, i) => (
+              .map((item, index) => (
                 <span
-                  key={i}
-                  className="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-600"
+                  key={index}
+                  className="bg-[#eef9ff] text-[#00ADEF] px-3 py-1 rounded-full text-sm"
                 >
                   {item}
                 </span>
@@ -105,22 +97,25 @@ const HotelCard = ({ room, index = 0 }) => {
           </div>
         )}
 
-        {/* PRICE + CTA */}
-        <div className="flex items-center justify-between mt-5">
-          <p className="text-sm text-gray-500">
-            <span className="text-2xl text-gray-800 font-bold">
+        {/* PRICE */}
+        <div className="flex items-end justify-between mt-8">
+          <div>
+            <p className="text-gray-500 text-sm">
+              Price per night
+            </p>
+
+            <h2 className="text-3xl font-bold text-gray-800 mt-1">
               {currency}
               {Number(
-                room?.pricePerNight ||
-                  0
+                room?.pricePerNight || 99
               ).toLocaleString()}
-            </span>{" "}
-            / night
-          </p>
+            </h2>
+          </div>
 
-          <span className="px-4 py-2 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+          {/* BUTTON */}
+          <button className="bg-[#00ADEF] hover:bg-[#0095cc] text-white px-5 py-3 rounded-lg font-semibold transition">
             Book Now
-          </span>
+          </button>
         </div>
       </div>
     </Link>

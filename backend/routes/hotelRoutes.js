@@ -1,20 +1,20 @@
 import express from "express";
 
-import { protect } from "../middleware/authMiddleware.js";
-
-import { registerHotel } from "../controllers/hotelController.js";
+import {
+  registerHotel,
+  getOwnerHotel,
+} from "../controllers/hotelController.js";
 
 const hotelRouter = express.Router();
 
 /* =========================
-   PROTECTED ROUTES
+   HOTEL ROUTES
 ========================= */
 
 // Register hotel
-hotelRouter.post(
-  "/",
-  protect,
-  registerHotel
-);
+hotelRouter.post("/", registerHotel);
+
+// Get current owner's hotel
+hotelRouter.get("/owner", getOwnerHotel);
 
 export default hotelRouter;
