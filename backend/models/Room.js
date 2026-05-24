@@ -16,6 +16,20 @@ const roomSchema = new mongoose.Schema(
       maxlength: 100,
     },
 
+    roomSize: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50,
+    },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 1000,
+    },
+
     pricePerNight: {
       type: Number,
       required: true,
@@ -29,19 +43,12 @@ const roomSchema = new mongoose.Schema(
 
     images: {
       type: [String],
-
       validate: {
         validator: function (arr) {
-          return (
-            Array.isArray(arr) &&
-            arr.length > 0
-          );
+          return Array.isArray(arr) && arr.length > 0;
         },
-
-        message:
-          "At least one image is required",
+        message: "At least one image is required",
       },
-
       required: true,
     },
 
@@ -62,58 +69,38 @@ const roomSchema = new mongoose.Schema(
 );
 
 // INDEXES
-roomSchema.index({
-  hotel: 1,
-});
-
-roomSchema.index({
-  isAvailable: 1,
-  createdAt: -1,
-});
-
-roomSchema.index({
-  hotel: 1,
-  isAvailable: 1,
-});
-
-roomSchema.index({
-  roomType: "text",
-});
-
-roomSchema.index({
-  pricePerNight: 1,
-});
+roomSchema.index({ hotel: 1 });
+roomSchema.index({ isAvailable: 1, createdAt: -1 });
+roomSchema.index({ hotel: 1, isAvailable: 1 });
+roomSchema.index({ roomType: "text", description: "text" });
+roomSchema.index({ pricePerNight: 1 });
+roomSchema.index({ maxGuests: 1 });
 
 // HOOKS
-roomSchema.pre(
-  "save",
-  function (next) {
-    if (this.roomType) {
-      this.roomType =
-        this.roomType.trim();
-    }
-
-    if (
-      Array.isArray(
-        this.amenities
-      )
-    ) {
-      this.amenities =
-        this.amenities.map(
-          (item) =>
-            String(item).trim()
-        );
-    }
-
-    next();
+roomSchema.pre("save", function (next) {
+  if (this.roomType) {
+    this.roomType = this.roomType.trim();
   }
-);
+
+  if (this.roomSize) {
+    this.roomSize = this.roomSize.trim();
+  }
+
+  if (this.description) {
+    this.description = this.description.trim();
+  }
+
+  if (Array.isArray(this.amenities)) {
+    this.amenities = this.amenities
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+
+  next();
+});
 
 const Room =
   mongoose.models.Room ||
-  mongoose.model(
-    "Room",
-    roomSchema
-  );
+  mongoose.model("Room", roomSchema);
 
 export default Room;
