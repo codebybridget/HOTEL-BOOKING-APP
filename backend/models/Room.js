@@ -32,10 +32,14 @@ const roomSchema = new mongoose.Schema(
 
       validate: {
         validator: function (arr) {
-          return Array.isArray(arr) && arr.length > 0;
+          return (
+            Array.isArray(arr) &&
+            arr.length > 0
+          );
         },
 
-        message: "At least one image is required",
+        message:
+          "At least one image is required",
       },
 
       required: true,
@@ -58,25 +62,58 @@ const roomSchema = new mongoose.Schema(
 );
 
 // INDEXES
-roomSchema.index({ hotel: 1 });
-roomSchema.index({ isAvailable: 1, createdAt: -1 });
-roomSchema.index({ hotel: 1, isAvailable: 1 });
+roomSchema.index({
+  hotel: 1,
+});
+
+roomSchema.index({
+  isAvailable: 1,
+  createdAt: -1,
+});
+
+roomSchema.index({
+  hotel: 1,
+  isAvailable: 1,
+});
+
+roomSchema.index({
+  roomType: "text",
+});
+
+roomSchema.index({
+  pricePerNight: 1,
+});
 
 // HOOKS
-roomSchema.pre("save", function (next) {
-  if (this.roomType) {
-    this.roomType = this.roomType.trim();
+roomSchema.pre(
+  "save",
+  function (next) {
+    if (this.roomType) {
+      this.roomType =
+        this.roomType.trim();
+    }
+
+    if (
+      Array.isArray(
+        this.amenities
+      )
+    ) {
+      this.amenities =
+        this.amenities.map(
+          (item) =>
+            String(item).trim()
+        );
+    }
+
+    next();
   }
-
-  this.amenities = this.amenities.map((item) =>
-    item.trim()
-  );
-
-  next();
-});
+);
 
 const Room =
   mongoose.models.Room ||
-  mongoose.model("Room", roomSchema);
+  mongoose.model(
+    "Room",
+    roomSchema
+  );
 
 export default Room;

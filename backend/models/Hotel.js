@@ -33,7 +33,16 @@ const hotelSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // STATE
     city: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    // AREA / DISTRICT
+    area: {
       type: String,
       required: true,
       trim: true,
@@ -70,10 +79,22 @@ const hotelSchema = new mongoose.Schema(
 
 // INDEXES
 hotelSchema.index({ city: 1 });
+
+hotelSchema.index({ area: 1 });
+
 hotelSchema.index({ owner: 1 });
-hotelSchema.index({ name: "text", city: "text" });
+
+hotelSchema.index({
+  name: "text",
+  city: "text",
+  area: "text",
+});
 
 const Hotel =
-  mongoose.models.Hotel || mongoose.model("Hotel", hotelSchema);
+  mongoose.models.Hotel ||
+  mongoose.model(
+    "Hotel",
+    hotelSchema
+  );
 
 export default Hotel;

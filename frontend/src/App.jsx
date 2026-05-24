@@ -1,5 +1,10 @@
 import React from "react";
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
@@ -12,6 +17,7 @@ import Experience from "./pages/Experience";
 import About from "./pages/About";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
+import HotelDetails from "./pages/HotelDetails";
 import MyBookings from "./pages/MyBookings";
 
 import Layout from "./pages/HotelOwner/Layout";
@@ -23,7 +29,9 @@ import { useAppContext } from "./context/AppContext";
 
 const App = () => {
   const location = useLocation();
-  const isOwnerRoute = location.pathname.startsWith("/owner");
+
+  const isOwnerRoute =
+    location.pathname.startsWith("/owner");
 
   const {
     user,
@@ -37,34 +45,56 @@ const App = () => {
     fetchUser,
   } = useAppContext();
 
-  const shouldShowRoleSelect = user && roleLoaded && !isOwner;
+  const shouldShowRoleSelect =
+    user && roleLoaded && !isOwner;
 
-  const ProtectedOwnerRoute = ({ children }) => {
+  const ProtectedOwnerRoute = ({
+    children,
+  }) => {
     if (!roleLoaded) {
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-500">
+            Loading...
+          </p>
         </div>
       );
     }
 
     if (!user || !isOwner) {
-      return <Navigate to="/rooms" replace />;
+      return (
+        <Navigate
+          to="/rooms"
+          replace
+        />
+      );
     }
 
     return children;
   };
 
-  const handleRoleSelect = async (role) => {
+  const handleRoleSelect = async (
+    role
+  ) => {
     try {
-      const { data } = await axios.post("/api/user/set-role", { role });
+      const { data } =
+        await axios.post(
+          "/api/user/set-role",
+          { role }
+        );
 
       if (!data?.success) {
-        toast.error(data?.message || "Failed to select account type");
+        toast.error(
+          data?.message ||
+            "Failed to select account type"
+        );
+
         return;
       }
 
-      toast.success("Account type selected");
+      toast.success(
+        "Account type selected"
+      );
 
       await fetchUser();
 
@@ -76,10 +106,15 @@ const App = () => {
         navigate("/rooms");
       }
     } catch (error) {
-      console.error("Set role error:", error.response?.data || error.message);
+      console.error(
+        "Set role error:",
+        error.response?.data ||
+          error.message
+      );
 
       toast.error(
-        error.response?.data?.message || "Failed to select account type"
+        error.response?.data?.message ||
+          "Failed to select account type"
       );
     }
   };
@@ -90,15 +125,47 @@ const App = () => {
 
       {showHotelReg && <HotelReg />}
 
-      {shouldShowRoleSelect && <RoleSelect onSelect={handleRoleSelect} />}
+      {shouldShowRoleSelect && (
+        <RoleSelect
+          onSelect={handleRoleSelect}
+        />
+      )}
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/rooms" element={<AllRooms />} />
-        <Route path="/rooms/:id" element={<RoomDetails />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/experience" element={<Experience />} />
-        <Route path="/about" element={<About />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/rooms"
+          element={<AllRooms />}
+        />
+
+        <Route
+          path="/rooms/:id"
+          element={<RoomDetails />}
+        />
+
+        <Route
+          path="/hotels/:id"
+          element={<HotelDetails />}
+        />
+
+        <Route
+          path="/my-bookings"
+          element={<MyBookings />}
+        />
+
+        <Route
+          path="/experience"
+          element={<Experience />}
+        />
+
+        <Route
+          path="/about"
+          element={<About />}
+        />
 
         <Route
           path="/owner"
@@ -108,15 +175,28 @@ const App = () => {
             </ProtectedOwnerRoute>
           }
         >
-          <Route index element={<Dashboard />} />
-          <Route path="add-room" element={<AddRoom />} />
-          <Route path="list-room" element={<ListRoom />} />
+          <Route
+            index
+            element={<Dashboard />}
+          />
+
+          <Route
+            path="add-room"
+            element={<AddRoom />}
+          />
+
+          <Route
+            path="list-room"
+            element={<ListRoom />}
+          />
         </Route>
 
         <Route
           path="*"
           element={
-            <h1 className="text-center mt-20 text-2xl">Page Not Found</h1>
+            <h1 className="text-center mt-20 text-2xl">
+              Page Not Found
+            </h1>
           }
         />
       </Routes>

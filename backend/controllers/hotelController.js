@@ -1,4 +1,5 @@
 import Hotel from "../models/Hotel.js";
+import Room from "../models/Room.js";
 import { cloudinary } from "../configs/cloudinary.js";
 
 const uploadToCloudinary = (file) => {
@@ -9,8 +10,11 @@ const uploadToCloudinary = (file) => {
         resource_type: "image",
       },
       (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
       }
     );
 
@@ -30,9 +34,9 @@ export const registerHotel = async (req, res) => {
       });
     }
 
-    let { name, address, contact, city } = req.body;
+    let { name, address, contact, city, area } = req.body;
 
-    if (!name || !address || !contact || !city) {
+    if (!name || !address || !contact || !city || !area) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -43,6 +47,7 @@ export const registerHotel = async (req, res) => {
     address = address.trim();
     contact = contact.trim();
     city = city.trim().toLowerCase();
+    area = area.trim().toLowerCase();
 
     if (contact.length < 7) {
       return res.status(400).json({
@@ -76,6 +81,7 @@ export const registerHotel = async (req, res) => {
       address,
       contact,
       city,
+      area,
       images,
     });
 
@@ -90,6 +96,104 @@ export const registerHotel = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to register hotel",
+    });
+  }
+};
+
+// GET ALL HOTELS
+export const getHotels = async (req, res) => {
+  try {
+    const { destination, area } = req.query;
+
+    const filter = {
+      isActive: true,
+    };
+
+    if (destination) {
+      filter.city = {
+        $regex: destination,
+        $options: "i",
+      };
+    }
+
+    if (area) {
+      filter.area = {
+        $regex: area,
+        $options: "i",
+      };
+    }
+
+    const hotels = await Hotel.find(filter).sort({
+      createdAt: -1,
+    });
+
+    const hotelsWithRooms = await Promise.all(
+      hotels.map(async (hotel) => {
+        const rooms = await Room.find({
+          hotel: hotel._id,
+          isAvailable: true,
+        }).sort({
+          pricePerNight: 1,
+        });
+
+        return {
+          ...hotel.toObject(),
+          rooms,
+          roomsCount: rooms.length,
+          lowestPrice:
+            rooms.length > 0
+              ? Math.min(...rooms.map((room) => room.pricePerNight))
+              : 0,
+        };
+      })
+    );
+
+    return res.json({
+      success: true,
+      hotels: hotelsWithRooms,
+    });
+  } catch (error) {
+    console.error("Get hotels error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch hotels",
+    });
+  }
+};
+
+// GET SINGLE HOTEL WITH ROOMS
+export const getHotelById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hotel = await Hotel.findById(id);
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found",
+      });
+    }
+
+    const rooms = await Room.find({
+      hotel: hotel._id,
+      isAvailable: true,
+    }).sort({
+      pricePerNight: 1,
+    });
+
+    return res.json({
+      success: true,
+      hotel,
+      rooms,
+    });
+  } catch (error) {
+    console.error("Get hotel details error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch hotel details",
     });
   }
 };
@@ -143,9 +247,9 @@ export const updateOwnerHotel = async (req, res) => {
       });
     }
 
-    let { name, address, contact, city } = req.body;
+    let { name, address, contact, city, area } = req.body;
 
-    if (!name || !address || !contact || !city) {
+    if (!name || !address || !contact || !city || !area) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -156,6 +260,7 @@ export const updateOwnerHotel = async (req, res) => {
     address = address.trim();
     contact = contact.trim();
     city = city.trim().toLowerCase();
+    area = area.trim().toLowerCase();
 
     if (contact.length < 7) {
       return res.status(400).json({
@@ -169,6 +274,7 @@ export const updateOwnerHotel = async (req, res) => {
       address,
       contact,
       city,
+      area,
     };
 
     if (req.file) {
@@ -177,7 +283,9 @@ export const updateOwnerHotel = async (req, res) => {
     }
 
     const hotel = await Hotel.findOneAndUpdate(
-      { owner: ownerId },
+      {
+        owner: ownerId,
+      },
       {
         $set: updateData,
       },

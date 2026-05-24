@@ -2,6 +2,26 @@ import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
 import { cloudinary } from "../configs/cloudinary.js";
 
+const uploadRoomImageToCloudinary = (file) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "hotel_rooms",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+
+    stream.end(file.buffer);
+  });
+};
+
 // CREATE ROOM
 export const createRoom = async (req, res) => {
   try {
@@ -31,12 +51,21 @@ export const createRoom = async (req, res) => {
       });
     }
 
-    const hotel = await Hotel.findOne({ owner: ownerId });
+    const hotel = await Hotel.findOne({
+      owner: ownerId,
+    });
 
     if (!hotel) {
       return res.status(404).json({
         success: false,
         message: "No hotel found for this user",
+      });
+    }
+
+    if (!hotel.area) {
+      return res.status(400).json({
+        success: false,
+        message: "Please update your hotel area before adding rooms",
       });
     }
 
@@ -57,7 +86,9 @@ export const createRoom = async (req, res) => {
         throw new Error("Amenities must be an array");
       }
 
-      parsedAmenities = parsedAmenities.map((item) => String(item).trim());
+      parsedAmenities = parsedAmenities
+        .map((item) => String(item).trim())
+        .filter(Boolean);
     } catch {
       return res.status(400).json({
         success: false,
@@ -69,26 +100,7 @@ export const createRoom = async (req, res) => {
 
     try {
       const results = await Promise.all(
-        req.files.map(
-          (file) =>
-            new Promise((resolve, reject) => {
-              const stream = cloudinary.uploader.upload_stream(
-                {
-                  folder: "hotel_rooms",
-                  resource_type: "image",
-                },
-                (error, result) => {
-                  if (error) {
-                    reject(error);
-                  } else {
-                    resolve(result);
-                  }
-                }
-              );
-
-              stream.end(file.buffer);
-            })
-        )
+        req.files.map((file) => uploadRoomImageToCloudinary(file))
       );
 
       images = results.map((result) => result.secure_url);
@@ -110,17 +122,22 @@ export const createRoom = async (req, res) => {
       isAvailable: true,
     });
 
+    const populatedRoom = await Room.findById(room._id).populate({
+      path: "hotel",
+      select: "name address contact city area images rating isActive owner",
+    });
+
     return res.status(201).json({
       success: true,
       message: "Room created successfully",
-      room,
+      room: populatedRoom,
     });
   } catch (error) {
     console.error("Room creation error:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: error.message || "Server error",
     });
   }
 };
@@ -128,8 +145,45 @@ export const createRoom = async (req, res) => {
 // GET ALL AVAILABLE ROOMS
 export const getRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ isAvailable: true })
-      .populate("hotel")
+    const { destination, area } = req.query;
+
+    const hotelFilter = {
+      isActive: true,
+    };
+
+    if (destination) {
+      hotelFilter.city = {
+        $regex: destination,
+        $options: "i",
+      };
+    }
+
+    if (area) {
+      hotelFilter.area = {
+        $regex: area,
+        $options: "i",
+      };
+    }
+
+    const hotels = await Hotel.find(hotelFilter).select("_id");
+
+    const hotelIds = hotels.map((hotel) => hotel._id);
+
+    const roomFilter = {
+      isAvailable: true,
+    };
+
+    if (destination || area) {
+      roomFilter.hotel = {
+        $in: hotelIds,
+      };
+    }
+
+    const rooms = await Room.find(roomFilter)
+      .populate({
+        path: "hotel",
+        select: "name address contact city area images rating isActive owner",
+      })
       .sort({ createdAt: -1 });
 
     return res.json({
@@ -158,7 +212,9 @@ export const getOwnerRooms = async (req, res) => {
       });
     }
 
-    const hotel = await Hotel.findOne({ owner: ownerId });
+    const hotel = await Hotel.findOne({
+      owner: ownerId,
+    });
 
     if (!hotel) {
       return res.json({
@@ -167,8 +223,13 @@ export const getOwnerRooms = async (req, res) => {
       });
     }
 
-    const rooms = await Room.find({ hotel: hotel._id })
-      .populate("hotel")
+    const rooms = await Room.find({
+      hotel: hotel._id,
+    })
+      .populate({
+        path: "hotel",
+        select: "name address contact city area images rating isActive owner",
+      })
       .sort({ createdAt: -1 });
 
     return res.json({
@@ -222,13 +283,19 @@ export const toggleRoomAvailability = async (req, res) => {
     }
 
     room.isAvailable = !room.isAvailable;
+
     await room.save();
+
+    const populatedRoom = await Room.findById(room._id).populate({
+      path: "hotel",
+      select: "name address contact city area images rating isActive owner",
+    });
 
     return res.json({
       success: true,
       message: "Room availability updated",
-      isAvailable: room.isAvailable,
-      room,
+      isAvailable: populatedRoom.isAvailable,
+      room: populatedRoom,
     });
   } catch (error) {
     console.error("Toggle availability error:", error.message);
