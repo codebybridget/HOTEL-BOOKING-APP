@@ -10,7 +10,8 @@ import axiosLib from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser, useAuth } from "@clerk/clerk-react";
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 const axios = axiosLib.create({
   baseURL: backendUrl,
@@ -21,8 +22,14 @@ const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
   const navigate = useNavigate();
+
   const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
+
+  const {
+    getToken,
+    isLoaded: authLoaded,
+    isSignedIn,
+  } = useAuth();
 
   const [isOwner, setIsOwner] = useState(false);
   const [roleLoaded, setRoleLoaded] = useState(false);
@@ -35,9 +42,14 @@ export const AppProvider = ({ children }) => {
     const interceptor = axios.interceptors.request.use(
       async (config) => {
         try {
+          if (!authLoaded || !isSignedIn) {
+            return config;
+          }
+
           const token = await getToken();
 
           if (token) {
+            config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
           }
         } catch (error) {
@@ -52,11 +64,20 @@ export const AppProvider = ({ children }) => {
     return () => {
       axios.interceptors.request.eject(interceptor);
     };
-  }, [getToken]);
+  }, [getToken, authLoaded, isSignedIn]);
 
   const fetchUser = useCallback(async () => {
     try {
       setRoleLoaded(false);
+
+      if (!authLoaded) return;
+
+      if (!isSignedIn) {
+        setIsOwner(false);
+        setSearchedCities([]);
+        setRoleLoaded(true);
+        return;
+      }
 
       const { data } = await axios.get("/api/user");
 
@@ -80,19 +101,19 @@ export const AppProvider = ({ children }) => {
     } finally {
       setRoleLoaded(true);
     }
-  }, []);
+  }, [authLoaded, isSignedIn]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !authLoaded) return;
 
-    if (user) {
+    if (user && isSignedIn) {
       fetchUser();
     } else {
       setIsOwner(false);
       setSearchedCities([]);
       setRoleLoaded(true);
     }
-  }, [isLoaded, user, fetchUser]);
+  }, [isLoaded, authLoaded, isSignedIn, user, fetchUser]);
 
   const value = useMemo(
     () => ({

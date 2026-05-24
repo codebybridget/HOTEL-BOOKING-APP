@@ -60,8 +60,10 @@ app.get("/", (req, res) => {
 app.use("/api/user", userRouter);
 app.use("/api/rooms", roomRouter);
 
-// Protected routes
-app.use("/api/hotels", protect, hotelRouter);
+// Hotel routes
+app.use("/api/hotels", hotelRouter);
+
+// Protected booking routes
 app.use("/api/bookings", protect, bookingRouter);
 
 app.get("/api/protected", protect, (req, res) => {

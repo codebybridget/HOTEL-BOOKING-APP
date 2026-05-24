@@ -1,5 +1,6 @@
 import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 import {
   registerHotel,
@@ -12,37 +13,38 @@ import {
 const hotelRouter = express.Router();
 
 /* =========================
-   HOTEL ROUTES
+   PUBLIC ROUTES
 ========================= */
 
 // GET ALL HOTELS
-hotelRouter.get(
-  "/",
-  getHotels
-);
+hotelRouter.get("/", getHotels);
+
+// GET SINGLE HOTEL
+hotelRouter.get("/:id", getHotelById);
+
+/* =========================
+   PROTECTED OWNER ROUTES
+========================= */
 
 // GET OWNER HOTEL
 hotelRouter.get(
-  "/owner",
+  "/owner/me",
+  protect,
   getOwnerHotel
-);
-
-// GET SINGLE HOTEL
-hotelRouter.get(
-  "/:id",
-  getHotelById
 );
 
 // REGISTER HOTEL
 hotelRouter.post(
   "/",
+  protect,
   upload.single("image"),
   registerHotel
 );
 
 // UPDATE OWNER HOTEL
 hotelRouter.patch(
-  "/owner",
+  "/owner/me",
+  protect,
   upload.single("image"),
   updateOwnerHotel
 );
