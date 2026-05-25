@@ -6,12 +6,19 @@ import React, {
   useMemo,
   useState,
 } from "react";
+
 import axiosLib from "axios";
+
 import { useNavigate } from "react-router-dom";
-import { useUser, useAuth } from "@clerk/clerk-react";
+
+import {
+  useUser,
+  useAuth,
+} from "@clerk/clerk-react";
 
 const backendUrl =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://localhost:3000";
 
 const axios = axiosLib.create({
   baseURL: backendUrl,
@@ -20,10 +27,13 @@ const axios = axiosLib.create({
 
 const AppContext = createContext(null);
 
-export const AppProvider = ({ children }) => {
+export const AppProvider = ({
+  children,
+}) => {
   const navigate = useNavigate();
 
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } =
+    useUser();
 
   const {
     getToken,
@@ -31,89 +41,168 @@ export const AppProvider = ({ children }) => {
     isSignedIn,
   } = useAuth();
 
-  const [isOwner, setIsOwner] = useState(false);
-  const [roleLoaded, setRoleLoaded] = useState(false);
-  const [showHotelReg, setShowHotelReg] = useState(false);
-  const [searchedCities, setSearchedCities] = useState([]);
+  const [isOwner, setIsOwner] =
+    useState(false);
 
-  const currency = import.meta.env.VITE_CURRENCY || "₦";
+  const [roleLoaded, setRoleLoaded] =
+    useState(false);
 
+  const [
+    showHotelReg,
+    setShowHotelReg,
+  ] = useState(false);
+
+  const [
+    searchedCities,
+    setSearchedCities,
+  ] = useState([]);
+
+  const currency =
+    import.meta.env.VITE_CURRENCY ||
+    "₦";
+
+  // AXIOS TOKEN INTERCEPTOR
   useEffect(() => {
-    const interceptor = axios.interceptors.request.use(
-      async (config) => {
-        try {
-          if (!authLoaded || !isSignedIn) {
+    const interceptor =
+      axios.interceptors.request.use(
+        async (config) => {
+          try {
+            if (
+              !authLoaded ||
+              !isSignedIn
+            ) {
+              return config;
+            }
+
+            const token =
+              await getToken();
+
+            if (token) {
+              config.headers =
+                config.headers || {};
+
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+
+            return config;
+          } catch (error) {
+            console.warn(
+              "Token fetch failed:",
+              error
+            );
+
             return config;
           }
-
-          const token = await getToken();
-
-          if (token) {
-            config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${token}`;
-          }
-        } catch (error) {
-          console.warn("Token fetch failed:", error);
-        }
-
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    return () => {
-      axios.interceptors.request.eject(interceptor);
-    };
-  }, [getToken, authLoaded, isSignedIn]);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      setRoleLoaded(false);
-
-      if (!authLoaded) return;
-
-      if (!isSignedIn) {
-        setIsOwner(false);
-        setSearchedCities([]);
-        setRoleLoaded(true);
-        return;
-      }
-
-      const { data } = await axios.get("/api/user");
-
-      if (data?.success) {
-        const userData = data.user || {};
-
-        setIsOwner(userData.role === "hotelOwner");
-        setSearchedCities(userData.recentSearchedCities || []);
-      } else {
-        setIsOwner(false);
-        setSearchedCities([]);
-      }
-    } catch (error) {
-      console.error(
-        "Failed to load user:",
-        error.response?.data || error.message
+        },
+        (error) =>
+          Promise.reject(error)
       );
 
-      setIsOwner(false);
-      setSearchedCities([]);
-    } finally {
-      setRoleLoaded(true);
-    }
-  }, [authLoaded, isSignedIn]);
+    return () => {
+      axios.interceptors.request.eject(
+        interceptor
+      );
+    };
+  }, [
+    getToken,
+    authLoaded,
+    isSignedIn,
+  ]);
 
+  // FETCH USER
+  const fetchUser = useCallback(
+    async () => {
+      try {
+        if (
+          !authLoaded ||
+          !isLoaded
+        ) {
+          return;
+        }
+
+        setRoleLoaded(false);
+
+        // USER NOT SIGNED IN
+        if (!isSignedIn || !user) {
+          setIsOwner(false);
+
+          setSearchedCities([]);
+
+          setRoleLoaded(true);
+
+          return;
+        }
+
+        const token =
+          await getToken();
+
+        if (!token) {
+          setRoleLoaded(true);
+
+          return;
+        }
+
+        const { data } =
+          await axios.get(
+            "/api/user"
+          );
+
+        if (data?.success) {
+          const userData =
+            data.user || {};
+
+          setIsOwner(
+            userData.role ===
+              "hotelOwner"
+          );
+
+          setSearchedCities(
+            userData.recentSearchedCities ||
+              []
+          );
+        } else {
+          setIsOwner(false);
+
+          setSearchedCities([]);
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load user:",
+          error.response?.data ||
+            error.message
+        );
+
+        setIsOwner(false);
+
+        setSearchedCities([]);
+      } finally {
+        setRoleLoaded(true);
+      }
+    },
+    [
+      authLoaded,
+      isLoaded,
+      isSignedIn,
+      user,
+      getToken,
+    ]
+  );
+
+  // LOAD USER
   useEffect(() => {
-    if (!isLoaded || !authLoaded) return;
-
-    if (user && isSignedIn) {
-      fetchUser();
-    } else {
-      setIsOwner(false);
-      setSearchedCities([]);
-      setRoleLoaded(true);
+    if (
+      !isLoaded ||
+      !authLoaded
+    ) {
+      return;
     }
-  }, [isLoaded, authLoaded, isSignedIn, user, fetchUser]);
+
+    fetchUser();
+  }, [
+    isLoaded,
+    authLoaded,
+    fetchUser,
+  ]);
 
   const value = useMemo(
     () => ({
@@ -122,13 +211,18 @@ export const AppProvider = ({ children }) => {
       axios,
       user,
       getToken,
+
       isOwner,
       setIsOwner,
+
       roleLoaded,
+
       showHotelReg,
       setShowHotelReg,
+
       searchedCities,
       setSearchedCities,
+
       fetchUser,
     }),
     [
@@ -136,22 +230,35 @@ export const AppProvider = ({ children }) => {
       navigate,
       user,
       getToken,
+
       isOwner,
       roleLoaded,
+
       showHotelReg,
+
       searchedCities,
+
       fetchUser,
     ]
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider
+      value={value}
+    >
+      {children}
+    </AppContext.Provider>
+  );
 };
 
 export const useAppContext = () => {
-  const context = useContext(AppContext);
+  const context =
+    useContext(AppContext);
 
   if (!context) {
-    throw new Error("useAppContext must be used within AppProvider");
+    throw new Error(
+      "useAppContext must be used within AppProvider"
+    );
   }
 
   return context;

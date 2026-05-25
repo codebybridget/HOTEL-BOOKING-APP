@@ -25,12 +25,11 @@ const hotelSchema = new mongoose.Schema(
       maxlength: 20,
     },
 
-    // Clerk User ID
+    // OWNER CAN NOW HAVE MANY HOTELS
     owner: {
       type: String,
       required: true,
       ref: "User",
-      unique: true,
     },
 
     // STATE
@@ -92,9 +91,6 @@ hotelSchema.index({
 
 const Hotel =
   mongoose.models.Hotel ||
-  mongoose.model(
-    "Hotel",
-    hotelSchema
-  );
+  mongoose.model("Hotel", hotelSchema);
 
 export default Hotel;

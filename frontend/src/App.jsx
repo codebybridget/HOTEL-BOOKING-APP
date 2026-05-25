@@ -46,25 +46,23 @@ const App = () => {
   } = useAppContext();
 
   const shouldShowRoleSelect =
-    user && roleLoaded && !isOwner;
+    user && roleLoaded && !isOwner && !isOwnerRoute;
 
-  const ProtectedOwnerRoute = ({
-    children,
-  }) => {
+  const ProtectedOwnerRoute = ({ children }) => {
     if (!roleLoaded) {
       return (
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-500">
-            Loading...
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <p className="text-lg text-gray-500">
+            Loading dashboard...
           </p>
         </div>
       );
     }
 
-    if (!user || !isOwner) {
+    if (roleLoaded && (!user || !isOwner)) {
       return (
         <Navigate
-          to="/rooms"
+          to="/"
           replace
         />
       );
@@ -73,15 +71,12 @@ const App = () => {
     return children;
   };
 
-  const handleRoleSelect = async (
-    role
-  ) => {
+  const handleRoleSelect = async (role) => {
     try {
-      const { data } =
-        await axios.post(
-          "/api/user/set-role",
-          { role }
-        );
+      const { data } = await axios.post(
+        "/api/user/set-role",
+        { role }
+      );
 
       if (!data?.success) {
         toast.error(
@@ -92,17 +87,17 @@ const App = () => {
         return;
       }
 
-      toast.success(
-        "Account type selected"
-      );
+      toast.success("Account type selected");
 
       await fetchUser();
 
       if (role === "hotelOwner") {
         setIsOwner(true);
-        setShowHotelReg(true);
+        setShowHotelReg(false);
+        navigate("/owner/add-room");
       } else {
         setIsOwner(false);
+        setShowHotelReg(false);
         navigate("/rooms");
       }
     } catch (error) {
@@ -120,15 +115,13 @@ const App = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen overflow-x-hidden">
       {!isOwnerRoute && <Navbar />}
 
       {showHotelReg && <HotelReg />}
 
       {shouldShowRoleSelect && (
-        <RoleSelect
-          onSelect={handleRoleSelect}
-        />
+        <RoleSelect onSelect={handleRoleSelect} />
       )}
 
       <Routes>
@@ -202,7 +195,7 @@ const App = () => {
       </Routes>
 
       {!isOwnerRoute && <Footer />}
-    </>
+    </div>
   );
 };
 
