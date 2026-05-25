@@ -20,7 +20,6 @@ const AddRoom = () => {
 
   const [hotel, setHotel] = useState(null);
   const [showEditHotel, setShowEditHotel] = useState(false);
-
   const [hotelImage, setHotelImage] = useState(null);
 
   const [hotelForm, setHotelForm] = useState({
@@ -51,6 +50,7 @@ const AddRoom = () => {
     roomSize: "",
     description: "",
     maxGuests: 1,
+    totalRooms: 1,
     pricePerNight: "",
     amenities: initialAmenities,
   });
@@ -100,10 +100,8 @@ const AddRoom = () => {
 
       if (data?.success) {
         setHotel(data.hotel);
-
-        toast.success("Hotel registered successfully");
-
         setHotelImage(null);
+        toast.success("Hotel registered successfully");
       } else {
         toast.error(data?.message || "Registration failed");
       }
@@ -132,24 +130,17 @@ const AddRoom = () => {
         formData.append("image", hotelImage);
       }
 
-      const { data } = await axios.patch(
-        "/api/hotels/owner/me",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const { data } = await axios.patch("/api/hotels/owner/me", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (data?.success) {
         setHotel(data.hotel);
-
-        toast.success("Hotel updated successfully");
-
-        setShowEditHotel(false);
-
         setHotelImage(null);
+        setShowEditHotel(false);
+        toast.success("Hotel updated successfully");
       } else {
         toast.error(data?.message || "Update failed");
       }
@@ -195,12 +186,9 @@ const AddRoom = () => {
       formData.append("roomSize", inputs.roomSize);
       formData.append("description", inputs.description);
       formData.append("maxGuests", Number(inputs.maxGuests));
+      formData.append("totalRooms", Number(inputs.totalRooms));
       formData.append("pricePerNight", Number(inputs.pricePerNight));
-
-      formData.append(
-        "amenities",
-        JSON.stringify(amenitiesArray)
-      );
+      formData.append("amenities", JSON.stringify(amenitiesArray));
 
       uploadedImages.forEach((image) => {
         formData.append("images", image);
@@ -224,6 +212,7 @@ const AddRoom = () => {
         roomSize: "",
         description: "",
         maxGuests: 1,
+        totalRooms: 1,
         pricePerNight: "",
         amenities: initialAmenities,
       });
@@ -242,7 +231,7 @@ const AddRoom = () => {
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 overflow-x-hidden">
       <Title
         align="left"
         font="outfit"
@@ -253,44 +242,36 @@ const AddRoom = () => {
       {!hotel && (
         <form
           onSubmit={handleRegisterHotel}
-          className="bg-white border rounded-2xl p-8 mt-8 shadow-sm"
+          className="bg-white border rounded-2xl p-4 sm:p-8 mt-8 shadow-sm"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-8">
             Register Hotel
           </h2>
 
           <div className="mb-8">
-            <p className="font-medium mb-3">
-              Hotel Image
-            </p>
+            <p className="font-medium mb-3">Hotel Image</p>
 
-            <label className="cursor-pointer">
+            <label className="cursor-pointer inline-block">
               <img
                 src={
-                  hotelImage
-                    ? URL.createObjectURL(hotelImage)
-                    : assets.uploadArea
+                  hotelImage ? URL.createObjectURL(hotelImage) : assets.uploadArea
                 }
                 alt="hotel"
-                className="w-40 h-40 object-cover rounded-2xl border"
+                className="w-36 h-36 sm:w-40 sm:h-40 object-cover rounded-2xl border"
               />
 
               <input
                 type="file"
                 hidden
                 accept="image/*"
-                onChange={(e) =>
-                  setHotelImage(e.target.files[0])
-                }
+                onChange={(e) => setHotelImage(e.target.files[0])}
               />
             </label>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <p className="mb-2 font-medium">
-                Hotel Name
-              </p>
+              <p className="mb-2 font-medium">Hotel Name</p>
 
               <input
                 type="text"
@@ -308,9 +289,7 @@ const AddRoom = () => {
             </div>
 
             <div>
-              <p className="mb-2 font-medium">
-                Phone Number
-              </p>
+              <p className="mb-2 font-medium">Phone Number</p>
 
               <input
                 type="text"
@@ -328,9 +307,7 @@ const AddRoom = () => {
             </div>
 
             <div>
-              <p className="mb-2 font-medium">
-                State / Location
-              </p>
+              <p className="mb-2 font-medium">State / Location</p>
 
               <select
                 required
@@ -343,15 +320,10 @@ const AddRoom = () => {
                 }
                 className="border p-4 rounded-xl w-full"
               >
-                <option value="">
-                  Select State
-                </option>
+                <option value="">Select State</option>
 
                 {cities.map((city) => (
-                  <option
-                    key={city}
-                    value={city.toLowerCase()}
-                  >
+                  <option key={city} value={city.toLowerCase()}>
                     {city}
                   </option>
                 ))}
@@ -359,9 +331,7 @@ const AddRoom = () => {
             </div>
 
             <div>
-              <p className="mb-2 font-medium">
-                Area / District
-              </p>
+              <p className="mb-2 font-medium">Area / District</p>
 
               <input
                 type="text"
@@ -379,9 +349,7 @@ const AddRoom = () => {
             </div>
 
             <div className="md:col-span-2">
-              <p className="mb-2 font-medium">
-                Hotel Address
-              </p>
+              <p className="mb-2 font-medium">Hotel Address</p>
 
               <input
                 type="text"
@@ -402,43 +370,38 @@ const AddRoom = () => {
           <button
             type="submit"
             disabled={hotelLoading}
-            className="bg-black text-white px-8 py-4 rounded-xl mt-8"
+            className="bg-black text-white px-6 sm:px-8 py-4 rounded-xl mt-8 disabled:opacity-50"
           >
-            {hotelLoading
-              ? "Registering..."
-              : "Register Hotel"}
+            {hotelLoading ? "Registering..." : "Register Hotel"}
           </button>
         </form>
       )}
 
       {hotel && (
         <>
-          <div className="bg-white border rounded-2xl p-6 mt-8 shadow-sm">
+          <div className="bg-white border rounded-2xl p-4 sm:p-6 mt-8 shadow-sm">
             <div className="flex flex-col md:flex-row justify-between gap-6">
-              <div className="flex items-center gap-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 <img
-                  src={
-                    hotel?.images?.[0] ||
-                    assets.roomImg
-                  }
+                  src={hotel?.images?.[0] || assets.roomImg}
                   alt="hotel"
-                  className="w-32 h-32 rounded-2xl object-cover border"
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover border"
                 />
 
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-800">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
                     {hotel.name}
                   </h2>
 
-                  <p className="text-gray-500 mt-2">
+                  <p className="text-gray-500 mt-2 break-words">
                     {hotel.address}
                   </p>
 
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-gray-500 mt-1 break-words">
                     {hotel.contact}
                   </p>
 
-                  <div className="inline-block mt-4 bg-[#eef9ff] text-[#00ADEF] px-5 py-2 rounded-full capitalize">
+                  <div className="inline-block mt-4 bg-[#eef9ff] text-[#00ADEF] px-4 sm:px-5 py-2 rounded-full capitalize">
                     {hotel.city} • {hotel.area}
                   </div>
                 </div>
@@ -457,11 +420,9 @@ const AddRoom = () => {
                     area: hotel.area || "",
                   });
                 }}
-                className="bg-[#00ADEF] hover:bg-[#0095cc] text-white px-6 py-3 rounded-xl h-fit"
+                className="bg-[#00ADEF] hover:bg-[#0095cc] text-white px-6 py-3 rounded-xl h-fit w-full md:w-auto"
               >
-                {showEditHotel
-                  ? "Close Form"
-                  : "Edit Hotel"}
+                {showEditHotel ? "Close Form" : "Edit Hotel"}
               </button>
             </div>
 
@@ -471,41 +432,30 @@ const AddRoom = () => {
                 className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-10"
               >
                 <div className="md:col-span-2">
-                  <p className="mb-3 font-medium">
-                    Hotel Image
-                  </p>
+                  <p className="mb-3 font-medium">Hotel Image</p>
 
-                  <label className="cursor-pointer">
+                  <label className="cursor-pointer inline-block">
                     <img
                       src={
                         hotelImage
-                          ? URL.createObjectURL(
-                              hotelImage
-                            )
-                          : hotel?.images?.[0] ||
-                            assets.uploadArea
+                          ? URL.createObjectURL(hotelImage)
+                          : hotel?.images?.[0] || assets.uploadArea
                       }
                       alt="hotel"
-                      className="w-40 h-40 object-cover rounded-2xl border"
+                      className="w-36 h-36 sm:w-40 sm:h-40 object-cover rounded-2xl border"
                     />
 
                     <input
                       type="file"
                       hidden
                       accept="image/*"
-                      onChange={(e) =>
-                        setHotelImage(
-                          e.target.files[0]
-                        )
-                      }
+                      onChange={(e) => setHotelImage(e.target.files[0])}
                     />
                   </label>
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">
-                    Hotel Name
-                  </p>
+                  <p className="mb-2 font-medium">Hotel Name</p>
 
                   <input
                     type="text"
@@ -522,9 +472,7 @@ const AddRoom = () => {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">
-                    Phone Number
-                  </p>
+                  <p className="mb-2 font-medium">Phone Number</p>
 
                   <input
                     type="text"
@@ -541,9 +489,7 @@ const AddRoom = () => {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">
-                    State / Location
-                  </p>
+                  <p className="mb-2 font-medium">State / Location</p>
 
                   <select
                     required
@@ -556,15 +502,10 @@ const AddRoom = () => {
                     }
                     className="border p-4 rounded-xl w-full"
                   >
-                    <option value="">
-                      Select State
-                    </option>
+                    <option value="">Select State</option>
 
                     {cities.map((city) => (
-                      <option
-                        key={city}
-                        value={city.toLowerCase()}
-                      >
+                      <option key={city} value={city.toLowerCase()}>
                         {city}
                       </option>
                     ))}
@@ -572,9 +513,7 @@ const AddRoom = () => {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-medium">
-                    Area / District
-                  </p>
+                  <p className="mb-2 font-medium">Area / District</p>
 
                   <input
                     type="text"
@@ -591,9 +530,7 @@ const AddRoom = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <p className="mb-2 font-medium">
-                    Hotel Address
-                  </p>
+                  <p className="mb-2 font-medium">Hotel Address</p>
 
                   <input
                     type="text"
@@ -612,27 +549,20 @@ const AddRoom = () => {
                 <button
                   type="submit"
                   disabled={hotelLoading}
-                  className="bg-black text-white px-8 py-4 rounded-xl w-fit"
+                  className="bg-black text-white px-8 py-4 rounded-xl w-full sm:w-fit disabled:opacity-50"
                 >
-                  {hotelLoading
-                    ? "Saving..."
-                    : "Save Changes"}
+                  {hotelLoading ? "Saving..." : "Save Changes"}
                 </button>
               </form>
             )}
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="mt-12"
-          >
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">
+          <form onSubmit={handleSubmit} className="mt-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
               Add Room
             </h2>
 
-            <p className="font-medium text-lg mb-4">
-              Room Images
-            </p>
+            <p className="font-medium text-lg mb-4">Room Images</p>
 
             <div className="grid grid-cols-2 sm:flex gap-4 flex-wrap">
               {Object.keys(images).map((key) => (
@@ -640,25 +570,18 @@ const AddRoom = () => {
                   <img
                     src={
                       images[key]
-                        ? URL.createObjectURL(
-                            images[key]
-                          )
+                        ? URL.createObjectURL(images[key])
                         : assets.uploadArea
                     }
                     alt="upload"
-                    className="w-36 h-36 object-cover rounded-2xl border cursor-pointer"
+                    className="w-full h-32 sm:w-36 sm:h-36 object-cover rounded-2xl border cursor-pointer"
                   />
 
                   <input
                     type="file"
                     hidden
                     accept="image/*"
-                    onChange={(e) =>
-                      handleImageChange(
-                        key,
-                        e.target.files[0]
-                      )
-                    }
+                    onChange={(e) => handleImageChange(key, e.target.files[0])}
                   />
                 </label>
               ))}
@@ -666,9 +589,7 @@ const AddRoom = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
               <div>
-                <p className="mb-2 font-medium">
-                  Room Type
-                </p>
+                <p className="mb-2 font-medium">Room Type</p>
 
                 <select
                   required
@@ -681,40 +602,18 @@ const AddRoom = () => {
                   }
                   className="border p-4 rounded-xl w-full"
                 >
-                  <option value="">
-                    Select Room Type
-                  </option>
-
-                  <option value="Classic Room">
-                    Classic Room
-                  </option>
-
-                  <option value="Executive Room">
-                    Executive Room
-                  </option>
-
-                  <option value="Luxury Room">
-                    Luxury Room
-                  </option>
-
-                  <option value="Family Suite">
-                    Family Suite
-                  </option>
-
-                  <option value="Executive Suite">
-                    Executive Suite
-                  </option>
-
-                  <option value="Presidential Suite">
-                    Presidential Suite
-                  </option>
+                  <option value="">Select Room Type</option>
+                  <option value="Classic Room">Classic Room</option>
+                  <option value="Executive Room">Executive Room</option>
+                  <option value="Luxury Room">Luxury Room</option>
+                  <option value="Family Suite">Family Suite</option>
+                  <option value="Executive Suite">Executive Suite</option>
+                  <option value="Presidential Suite">Presidential Suite</option>
                 </select>
               </div>
 
               <div>
-                <p className="mb-2 font-medium">
-                  Room Size
-                </p>
+                <p className="mb-2 font-medium">Room Size</p>
 
                 <input
                   type="text"
@@ -732,9 +631,7 @@ const AddRoom = () => {
               </div>
 
               <div>
-                <p className="mb-2 font-medium">
-                  Max Guests
-                </p>
+                <p className="mb-2 font-medium">Max Guests</p>
 
                 <input
                   type="number"
@@ -752,9 +649,26 @@ const AddRoom = () => {
               </div>
 
               <div>
-                <p className="mb-2 font-medium">
-                  Price Per Night
-                </p>
+                <p className="mb-2 font-medium">Total Available Rooms</p>
+
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={inputs.totalRooms}
+                  onChange={(e) =>
+                    setInputs((prev) => ({
+                      ...prev,
+                      totalRooms: e.target.value,
+                    }))
+                  }
+                  placeholder="40"
+                  className="border p-4 rounded-xl w-full"
+                />
+              </div>
+
+              <div>
+                <p className="mb-2 font-medium">Price Per Night</p>
 
                 <input
                   type="number"
@@ -764,18 +678,16 @@ const AddRoom = () => {
                   onChange={(e) =>
                     setInputs((prev) => ({
                       ...prev,
-                      pricePerNight:
-                        e.target.value,
+                      pricePerNight: e.target.value,
                     }))
                   }
+                  placeholder="180000"
                   className="border p-4 rounded-xl w-full"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <p className="mb-2 font-medium">
-                  Room Description
-                </p>
+                <p className="mb-2 font-medium">Room Description</p>
 
                 <textarea
                   rows="5"
@@ -784,62 +696,48 @@ const AddRoom = () => {
                   onChange={(e) =>
                     setInputs((prev) => ({
                       ...prev,
-                      description:
-                        e.target.value,
+                      description: e.target.value,
                     }))
                   }
+                  placeholder="Large luxury room with smart TV, king-size bed, ocean view and free breakfast..."
                   className="border p-4 rounded-xl w-full resize-none"
                 />
               </div>
             </div>
 
-            <p className="font-medium text-lg mt-10 mb-4">
-              Amenities
-            </p>
+            <p className="font-medium text-lg mt-10 mb-4">Amenities</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.keys(inputs.amenities).map(
-                (amenity) => (
-                  <label
-                    key={amenity}
-                    className="flex items-center gap-3 bg-white border rounded-xl px-5 py-4"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={
-                        inputs.amenities[
-                          amenity
-                        ]
-                      }
-                      onChange={() =>
-                        setInputs((prev) => ({
-                          ...prev,
-                          amenities: {
-                            ...prev.amenities,
-                            [amenity]:
-                              !prev
-                                .amenities[
-                                amenity
-                              ],
-                          },
-                        }))
-                      }
-                    />
+              {Object.keys(inputs.amenities).map((amenity) => (
+                <label
+                  key={amenity}
+                  className="flex items-center gap-3 bg-white border rounded-xl px-5 py-4"
+                >
+                  <input
+                    type="checkbox"
+                    checked={inputs.amenities[amenity]}
+                    onChange={() =>
+                      setInputs((prev) => ({
+                        ...prev,
+                        amenities: {
+                          ...prev.amenities,
+                          [amenity]: !prev.amenities[amenity],
+                        },
+                      }))
+                    }
+                  />
 
-                    <span>{amenity}</span>
-                  </label>
-                )
-              )}
+                  <span>{amenity}</span>
+                </label>
+              ))}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#00ADEF] hover:bg-[#0094cc] text-white px-10 py-4 mt-10 rounded-xl font-semibold"
+              className="bg-[#00ADEF] hover:bg-[#0094cc] text-white px-8 sm:px-10 py-4 mt-10 rounded-xl font-semibold w-full sm:w-auto disabled:opacity-50"
             >
-              {loading
-                ? "Uploading..."
-                : "Add Room"}
+              {loading ? "Uploading..." : "Add Room"}
             </button>
           </form>
         </>

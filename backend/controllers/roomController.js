@@ -32,6 +32,7 @@ export const createRoom = async (req, res) => {
       roomSize,
       description,
       maxGuests,
+      totalRooms,
       pricePerNight,
       amenities,
     } = req.body;
@@ -47,7 +48,8 @@ export const createRoom = async (req, res) => {
       !roomType ||
       !roomSize ||
       !description ||
-      !pricePerNight
+      !pricePerNight ||
+      !totalRooms
     ) {
       return res.status(400).json({
         success: false,
@@ -61,6 +63,15 @@ export const createRoom = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid room price",
+      });
+    }
+
+    const total = Number(totalRooms);
+
+    if (Number.isNaN(total) || total <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid total rooms count",
       });
     }
 
@@ -131,6 +142,8 @@ export const createRoom = async (req, res) => {
       roomSize: roomSize.trim(),
       description: description.trim(),
       maxGuests: Number(maxGuests) || 1,
+      totalRooms: total,
+      bookedRooms: 0,
       pricePerNight: price,
       amenities: parsedAmenities,
       images,

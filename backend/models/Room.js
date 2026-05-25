@@ -30,6 +30,19 @@ const roomSchema = new mongoose.Schema(
       maxlength: 1000,
     },
 
+    totalRooms: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
+
+    bookedRooms: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     pricePerNight: {
       type: Number,
       required: true,
@@ -65,8 +78,17 @@ const roomSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+roomSchema.virtual("availableRooms").get(function () {
+  return Math.max(
+    Number(this.totalRooms || 0) - Number(this.bookedRooms || 0),
+    0
+  );
+});
 
 // INDEXES
 roomSchema.index({ hotel: 1 });
@@ -75,6 +97,8 @@ roomSchema.index({ hotel: 1, isAvailable: 1 });
 roomSchema.index({ roomType: "text", description: "text" });
 roomSchema.index({ pricePerNight: 1 });
 roomSchema.index({ maxGuests: 1 });
+roomSchema.index({ totalRooms: 1 });
+roomSchema.index({ bookedRooms: 1 });
 
 // HOOKS
 roomSchema.pre("save", function (next) {
@@ -88,6 +112,12 @@ roomSchema.pre("save", function (next) {
 
   if (this.description) {
     this.description = this.description.trim();
+  }
+
+  if (Number(this.bookedRooms || 0) >= Number(this.totalRooms || 0)) {
+    this.isAvailable = false;
+  } else {
+    this.isAvailable = true;
   }
 
   if (Array.isArray(this.amenities)) {
