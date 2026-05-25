@@ -19,14 +19,11 @@ const hotelRouter = express.Router();
 // GET ALL HOTELS
 hotelRouter.get("/", getHotels);
 
-// GET SINGLE HOTEL
-hotelRouter.get("/:id", getHotelById);
-
 /* =========================
-   PROTECTED OWNER ROUTES
+   OWNER ROUTES
 ========================= */
 
-// GET ALL OWNER HOTELS
+// GET OWNER HOTELS
 hotelRouter.get(
   "/owner/me",
   protect,
@@ -48,5 +45,15 @@ hotelRouter.patch(
   upload.single("image"),
   updateOwnerHotel
 );
+
+/* =========================
+   SINGLE HOTEL ROUTE
+========================= */
+
+// IMPORTANT:
+// KEEP THIS LAST
+// so "owner/me" does not clash with ":id"
+
+hotelRouter.get("/:id", getHotelById);
 
 export default hotelRouter;
