@@ -206,10 +206,14 @@ export const getOwnerHotel = async (req, res) => {
       createdAt: -1,
     });
 
+    // FIXED:
+    // Do NOT return 404 when owner has no hotels
     if (!hotels.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No hotel found",
+      return res.status(200).json({
+        success: true,
+        hotel: null,
+        hotels: [],
+        message: "No hotels found",
       });
     }
 
