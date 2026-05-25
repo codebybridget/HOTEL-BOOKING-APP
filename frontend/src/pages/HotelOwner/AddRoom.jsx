@@ -51,7 +51,7 @@ const AddRoom = () => {
   useEffect(() => {
     const fetchHotel = async () => {
       try {
-        const { data } = await axios.get("/api/hotels/owner");
+        const { data } = await axios.get("/api/hotels/owner/me");
 
         if (data?.success) {
           setHotel(data.hotel);
@@ -399,13 +399,14 @@ const AddRoom = () => {
                   }
                   className="border p-4 rounded-xl w-full"
                 >
-                <option value="Classic Room">Classic Room</option>
-                <option value="Executive Room">Executive Room</option>
-                <option value="Luxury Room">Luxury Room</option>
-                <option value="Family Suite">Family Suite</option>
-                <option value="Executive Suite">Executive Suite</option>
-                <option value="Presidential Suite">Presidential Suite</option>
-                  </select>
+                  <option value="">Select Room Type</option>
+                  <option value="Classic Room">Classic Room</option>
+                  <option value="Executive Room">Executive Room</option>
+                  <option value="Luxury Room">Luxury Room</option>
+                  <option value="Family Suite">Family Suite</option>
+                  <option value="Executive Suite">Executive Suite</option>
+                  <option value="Presidential Suite">Presidential Suite</option>
+                </select>
               </div>
 
               <div>
