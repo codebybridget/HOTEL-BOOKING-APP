@@ -26,14 +26,14 @@ hotelRouter.get("/:id", getHotelById);
    PROTECTED OWNER ROUTES
 ========================= */
 
-// GET OWNER HOTEL
+// GET ALL OWNER HOTELS
 hotelRouter.get(
   "/owner/me",
   protect,
   getOwnerHotel
 );
 
-// REGISTER HOTEL
+// REGISTER NEW HOTEL
 hotelRouter.post(
   "/",
   protect,
@@ -41,9 +41,9 @@ hotelRouter.post(
   registerHotel
 );
 
-// UPDATE OWNER HOTEL
+// UPDATE SPECIFIC HOTEL
 hotelRouter.patch(
-  "/owner/me",
+  "/owner/:hotelId",
   protect,
   upload.single("image"),
   updateOwnerHotel

@@ -10,11 +10,8 @@ const uploadToCloudinary = (file) => {
         resource_type: "image",
       },
       (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
+        if (error) reject(error);
+        else resolve(result);
       }
     );
 
@@ -22,7 +19,7 @@ const uploadToCloudinary = (file) => {
   });
 };
 
-// REGISTER HOTEL
+// REGISTER HOTEL - ONE OWNER CAN CREATE MANY HOTELS
 export const registerHotel = async (req, res) => {
   try {
     const ownerId = req.auth?.userId;
@@ -53,18 +50,6 @@ export const registerHotel = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid contact number",
-      });
-    }
-
-    const existingHotel = await Hotel.findOne({
-      owner: ownerId,
-    });
-
-    if (existingHotel) {
-      return res.status(200).json({
-        success: true,
-        message: "Hotel already registered",
-        hotel: existingHotel,
       });
     }
 
@@ -131,15 +116,21 @@ export const getHotels = async (req, res) => {
       hotels.map(async (hotel) => {
         const rooms = await Room.find({
           hotel: hotel._id,
-          isAvailable: true,
         }).sort({
           pricePerNight: 1,
         });
+
+        const availableRooms = rooms.filter(
+          (room) =>
+            room.isAvailable &&
+            Number(room.totalRooms || 0) - Number(room.bookedRooms || 0) > 0
+        );
 
         return {
           ...hotel.toObject(),
           rooms,
           roomsCount: rooms.length,
+          availableRoomsCount: availableRooms.length,
           lowestPrice:
             rooms.length > 0
               ? Math.min(...rooms.map((room) => room.pricePerNight))
@@ -178,7 +169,6 @@ export const getHotelById = async (req, res) => {
 
     const rooms = await Room.find({
       hotel: hotel._id,
-      isAvailable: true,
     }).sort({
       pricePerNight: 1,
     });
@@ -198,7 +188,7 @@ export const getHotelById = async (req, res) => {
   }
 };
 
-// GET OWNER HOTEL
+// GET OWNER HOTELS
 export const getOwnerHotel = async (req, res) => {
   try {
     const ownerId = req.auth?.userId;
@@ -210,20 +200,23 @@ export const getOwnerHotel = async (req, res) => {
       });
     }
 
-    const hotel = await Hotel.findOne({
+    const hotels = await Hotel.find({
       owner: ownerId,
+    }).sort({
+      createdAt: -1,
     });
 
-    if (!hotel) {
+    if (!hotels.length) {
       return res.status(404).json({
         success: false,
-        message: "Hotel not found",
+        message: "No hotel found",
       });
     }
 
     return res.json({
       success: true,
-      hotel,
+      hotel: hotels[0],
+      hotels,
     });
   } catch (error) {
     console.error("Get owner hotel error:", error.message);
@@ -235,15 +228,23 @@ export const getOwnerHotel = async (req, res) => {
   }
 };
 
-// UPDATE OWNER HOTEL
+// UPDATE OWNER HOTEL BY HOTEL ID
 export const updateOwnerHotel = async (req, res) => {
   try {
     const ownerId = req.auth?.userId;
+    const { hotelId } = req.params;
 
     if (!ownerId) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
+      });
+    }
+
+    if (!hotelId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hotel ID is required",
       });
     }
 
@@ -284,6 +285,7 @@ export const updateOwnerHotel = async (req, res) => {
 
     const hotel = await Hotel.findOneAndUpdate(
       {
+        _id: hotelId,
         owner: ownerId,
       },
       {
