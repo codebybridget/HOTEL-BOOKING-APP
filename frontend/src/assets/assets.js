@@ -131,11 +131,31 @@ export const testimonials = [
 
 // Facility Icon
 export const facilityIcons = {
-    "Free WiFi": assets.freeWifiIcon,
-    "Free Breakfast": assets.freeBreakfastIcon,
-    "Room Service": assets.roomServiceIcon,
-    "Mountain View": assets.mountainIcon,
-    "Pool Access": assets.poolIcon,
+  "Free Wifi": assets.freeWifiIcon,
+
+  "Free Breakfast":
+    assets.freeBreakfastIcon,
+
+  Service:
+    assets.roomServiceIcon,
+
+  "Room Service":
+    assets.roomServiceIcon,
+
+  "Mountain View":
+    assets.mountainIcon,
+
+  "Pool Access":
+    assets.poolIcon,
+
+  Gym:
+    assets.homeIcon,
+
+  Parking:
+    assets.locationIcon,
+
+  Restaurant:
+    assets.badgeIcon,
 };
 
 // For Room Details Page
