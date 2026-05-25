@@ -13,14 +13,7 @@ import {
 const hotelRouter = express.Router();
 
 /* =========================
-   PUBLIC ROUTES
-========================= */
-
-// GET ALL HOTELS
-hotelRouter.get("/", getHotels);
-
-/* =========================
-   OWNER ROUTES
+   OWNER ROUTES FIRST
 ========================= */
 
 // GET OWNER HOTELS
@@ -30,15 +23,7 @@ hotelRouter.get(
   getOwnerHotel
 );
 
-// REGISTER NEW HOTEL
-hotelRouter.post(
-  "/",
-  protect,
-  upload.single("image"),
-  registerHotel
-);
-
-// UPDATE SPECIFIC HOTEL
+// UPDATE OWNER HOTEL
 hotelRouter.patch(
   "/owner/:hotelId",
   protect,
@@ -46,14 +31,23 @@ hotelRouter.patch(
   updateOwnerHotel
 );
 
+// REGISTER HOTEL
+hotelRouter.post(
+  "/",
+  protect,
+  upload.single("image"),
+  registerHotel
+);
+
 /* =========================
-   SINGLE HOTEL ROUTE
+   PUBLIC ROUTES
 ========================= */
 
-// IMPORTANT:
-// KEEP THIS LAST
-// so "owner/me" does not clash with ":id"
+// GET ALL HOTELS
+hotelRouter.get("/", getHotels);
 
+// IMPORTANT:
+// THIS MUST ALWAYS BE LAST
 hotelRouter.get("/:id", getHotelById);
 
 export default hotelRouter;
