@@ -399,14 +399,13 @@ const AddRoom = () => {
                   }
                   className="border p-4 rounded-xl w-full"
                 >
-                  <option value="">Select</option>
-                  <option value="Single Bed">Classic Room</option>
-                  <option value="Double Bed">Executive Room</option>
-                  <option value="Luxury Room">Luxury Room</option>
-                  <option value="Family Suite">Family Suite</option>
-                  <option value="Executive Suite">Executive Suite</option>
-                  <option value="Presidential Suite">Presidential Suite</option>
-                </select>
+                <option value="Classic Room">Classic Room</option>
+                <option value="Executive Room">Executive Room</option>
+                <option value="Luxury Room">Luxury Room</option>
+                <option value="Family Suite">Family Suite</option>
+                <option value="Executive Suite">Executive Suite</option>
+                <option value="Presidential Suite">Presidential Suite</option>
+                  </select>
               </div>
 
               <div>

@@ -24,7 +24,10 @@ const HotelDetails = () => {
           setMainImage(data.hotel?.images?.[0] || "");
         }
       } catch (error) {
-        console.error("Hotel details error:", error.response?.data || error.message);
+        console.error(
+          "Hotel details error:",
+          error.response?.data || error.message
+        );
       } finally {
         setLoading(false);
       }
@@ -35,7 +38,11 @@ const HotelDetails = () => {
 
   const handleRoomClick = (roomId) => {
     navigate(`/rooms/${roomId}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   if (loading) {
@@ -56,9 +63,10 @@ const HotelDetails = () => {
 
   return (
     <div className="bg-[#f8f8f8] min-h-screen pt-28 px-4 md:px-10 lg:px-20 pb-20">
+      {/* HOTEL HEADER */}
       <div className="bg-white rounded-3xl p-8 shadow-sm">
         <p className="text-[#00ADEF] text-lg font-medium capitalize">
-          {hotel.city} {hotel.area && `• ${hotel.area}`}
+          {hotel.city} • {hotel.area}
         </p>
 
         <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mt-3">
@@ -80,37 +88,46 @@ const HotelDetails = () => {
         </div>
       </div>
 
+      {/* HOTEL IMAGES */}
       <div className="grid lg:grid-cols-[2fr_1fr] gap-5 mt-10">
         <img
-          src={mainImage || hotel?.images?.[0] || assets.roomImg}
+          src={
+            mainImage ||
+            hotel?.images?.[0] ||
+            assets.roomImg
+          }
           alt={hotel.name}
           className="w-full h-[520px] object-cover rounded-3xl"
         />
 
         <div className="grid grid-cols-2 gap-4">
-          {(hotel.images?.length ? hotel.images : [assets.roomImg]).map(
-            (img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`${hotel.name}-${index}`}
-                onClick={() => setMainImage(img)}
-                className={`h-[250px] w-full object-cover rounded-2xl cursor-pointer border-4 ${
-                  mainImage === img ? "border-[#00ADEF]" : "border-transparent"
-                }`}
-              />
-            )
-          )}
+          {(hotel.images?.length
+            ? hotel.images
+            : [assets.roomImg]
+          ).map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt={`${hotel.name}-${index}`}
+              onClick={() => setMainImage(img)}
+              className={`h-[250px] w-full object-cover rounded-2xl cursor-pointer border-4 ${
+                mainImage === img
+                  ? "border-[#00ADEF]"
+                  : "border-transparent"
+              }`}
+            />
+          ))}
         </div>
       </div>
 
+      {/* ROOMS */}
       <div className="mt-14">
         <h2 className="text-4xl font-bold text-gray-800">
           Available Rooms
         </h2>
 
         <p className="text-gray-500 mt-3 text-lg">
-          Choose a room, check the price, and continue to booking.
+          Choose your preferred room and continue booking.
         </p>
 
         {rooms.length === 0 ? (
@@ -130,43 +147,77 @@ const HotelDetails = () => {
                 key={room._id}
                 className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition border"
               >
+                {/* ROOM IMAGE */}
                 <img
-                  src={room?.images?.[0] || assets.roomImg}
+                  src={
+                    room?.images?.[0] ||
+                    assets.roomImg
+                  }
                   alt={room.roomType}
                   className="w-full h-72 object-cover"
                 />
 
+                {/* ROOM CONTENT */}
                 <div className="p-6">
-                  <h3 className="text-2xl font-bold text-gray-800">
+                  {/* ROOM TYPE */}
+                  <h3 className="text-3xl font-bold text-gray-800">
                     {room.roomType}
                   </h3>
 
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {room?.amenities?.slice(0, 4).map((item, index) => (
-                      <span
-                        key={index}
-                        className="bg-[#eef9ff] text-[#00ADEF] px-3 py-1 rounded-full text-sm"
-                      >
-                        {item}
-                      </span>
-                    ))}
+                  {/* ROOM DESCRIPTION */}
+                  <p className="text-gray-500 mt-3 leading-relaxed">
+                    Spacious and luxurious room designed
+                    for comfort, relaxation and premium
+                    stay experience.
+                  </p>
+
+                  {/* ROOM SIZE */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+                      👥 Max Guests: {room.maxGuests || 2}
+                    </span>
+
+                    <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+                      🛏 Premium Room
+                    </span>
                   </div>
 
+                  {/* AMENITIES */}
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {room?.amenities?.slice(0, 4).map(
+                      (item, index) => (
+                        <span
+                          key={index}
+                          className="bg-[#eef9ff] text-[#00ADEF] px-3 py-1 rounded-full text-sm"
+                        >
+                          {item}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {/* PRICE + BUTTON */}
                   <div className="flex items-end justify-between mt-8">
                     <div>
-                      <p className="text-gray-500">Price / night</p>
+                      <p className="text-gray-500">
+                        Price / night
+                      </p>
 
-                      <h2 className="text-3xl font-bold text-gray-800 mt-1">
+                      <h2 className="text-4xl font-bold text-gray-800 mt-1">
                         {currency}
-                        {Number(room.pricePerNight || 0).toLocaleString()}
+                        {Number(
+                          room.pricePerNight || 0
+                        ).toLocaleString()}
                       </h2>
                     </div>
 
                     <button
-                      onClick={() => handleRoomClick(room._id)}
-                      className="bg-[#00ADEF] hover:bg-[#0095cc] text-white px-5 py-3 rounded-xl font-semibold transition"
+                      onClick={() =>
+                        handleRoomClick(room._id)
+                      }
+                      className="bg-[#00ADEF] hover:bg-[#0095cc] text-white px-6 py-3 rounded-xl font-semibold transition"
                     >
-                      Book
+                      Book Now
                     </button>
                   </div>
                 </div>
