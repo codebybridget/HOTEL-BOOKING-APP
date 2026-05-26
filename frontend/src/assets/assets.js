@@ -15,29 +15,21 @@ import freeBreakfastIcon from './freeBreakfastIcon.svg'
 import roomServiceIcon from './roomServiceIcon.svg'
 import mountainIcon from './mountainIcon.svg'
 import poolIcon from './poolIcon.svg'
-
-import locationFilledIcon from './locationFilledIcon.svg'
-
-const homeIcon = locationFilledIcon;
-
 import closeIcon from './closeIcon.svg'
+import locationFilledIcon from './locationFilledIcon.svg'
 import heartIcon from './heartIcon.svg'
 import badgeIcon from './badgeIcon.svg'
 import menuIcon from './menuIcon.svg'
 import closeMenu from './closeMenu.svg'
 import guestsIcon from './guestsIcon.svg'
-
 import roomImg1 from './roomImg1.png'
 import roomImg2 from './roomImg2.png'
 import roomImg3 from './roomImg3.png'
 import roomImg4 from './roomImg4.png'
-
 import regImage from './regImage.png'
-
 import exclusiveOfferCardImg1 from "./exclusiveOfferCardImg1.png";
 import exclusiveOfferCardImg2 from "./exclusiveOfferCardImg2.png";
 import exclusiveOfferCardImg3 from "./exclusiveOfferCardImg3.png";
-
 import addIcon from "./addIcon.svg";
 import dashboardIcon from "./dashboardIcon.svg";
 import listIcon from "./listIcon.svg";
@@ -45,9 +37,11 @@ import uploadArea from "./uploadArea.svg";
 import totalBookingIcon from "./totalBookingIcon.svg";
 import totalRevenueIcon from "./totalRevenueIcon.svg";
 
-import gymIcon from './gymIcon.svg'
-import parkingIcon from './parkingIcon.svg'
-import restaurantIcon from './restaurantIcon.svg'
+const homeIcon = locationFilledIcon;
+const gymIcon = badgeIcon;
+const parkingIcon = locationIcon;
+const restaurantIcon = roomServiceIcon;
+
 
 export const assets = {
     logo,
