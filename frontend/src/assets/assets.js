@@ -37,7 +37,9 @@ import listIcon from "./listIcon.svg";
 import uploadArea from "./uploadArea.svg";
 import totalBookingIcon from "./totalBookingIcon.svg";
 import totalRevenueIcon from "./totalRevenueIcon.svg";
-
+import gymIcon from './gymIcon.svg'
+import parkingIcon from './parkingIcon.svg'
+import restaurantIcon from './restaurantIcon.svg'
 
 export const assets = {
     logo,
@@ -72,6 +74,9 @@ export const assets = {
     uploadArea,
     totalBookingIcon,
     totalRevenueIcon,
+    gymIcon,
+    parkingIcon,
+    restaurantIcon,
 }
 
 export const cities = [
@@ -149,7 +154,7 @@ export const facilityIcons = {
     assets.poolIcon,
 
   Gym:
-    assets.homeIcon,
+    assets.gymIcon,
 
   Parking:
     assets.locationIcon,
