@@ -23,7 +23,10 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+
   "https://hotel-booking-app-frontend-rxdr.onrender.com",
+
+  "https://hotel-booking-app-frontend-zzl3.onrender.com",
 ];
 
 app.use(
