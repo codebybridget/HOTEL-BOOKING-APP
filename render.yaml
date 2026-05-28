@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hotel-booking-app-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
