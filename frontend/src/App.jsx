@@ -5,12 +5,9 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { toast } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import HotelReg from "./components/HotelReg";
-import RoleSelect from "./components/RoleSelect";
 
 import Home from "./pages/Home";
 import Experience from "./pages/Experience";
@@ -30,135 +27,38 @@ import { useAppContext } from "./context/AppContext";
 const App = () => {
   const location = useLocation();
 
-  const isOwnerRoute =
-    location.pathname.startsWith("/owner");
+  const isOwnerRoute = location.pathname.startsWith("/owner");
 
-  const {
-    user,
-    axios,
-    navigate,
-    showHotelReg,
-    setShowHotelReg,
-    isOwner,
-    setIsOwner,
-    roleLoaded,
-    fetchUser,
-  } = useAppContext();
-
-  const shouldShowRoleSelect =
-    user && roleLoaded && !isOwner && !isOwnerRoute;
+  const { user, isOwner, roleLoaded } = useAppContext();
 
   const ProtectedOwnerRoute = ({ children }) => {
     if (!roleLoaded) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-white">
-          <p className="text-lg text-gray-500">
-            Loading dashboard...
-          </p>
+          <p className="text-lg text-gray-500">Loading dashboard...</p>
         </div>
       );
     }
 
-    if (roleLoaded && (!user || !isOwner)) {
-      return (
-        <Navigate
-          to="/"
-          replace
-        />
-      );
+    if (!user || !isOwner) {
+      return <Navigate to="/" replace />;
     }
 
     return children;
-  };
-
-  const handleRoleSelect = async (role) => {
-    try {
-      const { data } = await axios.post(
-        "/api/user/set-role",
-        { role }
-      );
-
-      if (!data?.success) {
-        toast.error(
-          data?.message ||
-            "Failed to select account type"
-        );
-
-        return;
-      }
-
-      toast.success("Account type selected");
-
-      await fetchUser();
-
-      if (role === "hotelOwner") {
-        setIsOwner(true);
-        setShowHotelReg(false);
-        navigate("/owner/add-room");
-      } else {
-        setIsOwner(false);
-        setShowHotelReg(false);
-        navigate("/rooms");
-      }
-    } catch (error) {
-      console.error(
-        "Set role error:",
-        error.response?.data ||
-          error.message
-      );
-
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to select account type"
-      );
-    }
   };
 
   return (
     <div className="min-h-screen overflow-x-hidden">
       {!isOwnerRoute && <Navbar />}
 
-      {showHotelReg && <HotelReg />}
-
-      {shouldShowRoleSelect && (
-        <RoleSelect onSelect={handleRoleSelect} />
-      )}
-
       <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
-
-        <Route
-          path="/rooms"
-          element={<AllRooms />}
-        />
-
-        <Route
-          path="/rooms/:id"
-          element={<RoomDetails />}
-        />
-
-        <Route
-          path="/hotels/:id"
-          element={<HotelDetails />}
-        />
-
-        <Route
-          path="/my-bookings"
-          element={<MyBookings />}
-        />
-
-        <Route
-          path="/experience"
-          element={<Experience />}
-        />
-
-        <Route
-          path="/about"
-          element={<About />}
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/rooms" element={<AllRooms />} />
+        <Route path="/rooms/:id" element={<RoomDetails />} />
+        <Route path="/hotels/:id" element={<HotelDetails />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/experience" element={<Experience />} />
+        <Route path="/about" element={<About />} />
 
         <Route
           path="/owner"
@@ -168,20 +68,9 @@ const App = () => {
             </ProtectedOwnerRoute>
           }
         >
-          <Route
-            index
-            element={<Dashboard />}
-          />
-
-          <Route
-            path="add-room"
-            element={<AddRoom />}
-          />
-
-          <Route
-            path="list-room"
-            element={<ListRoom />}
-          />
+          <Route index element={<Dashboard />} />
+          <Route path="add-room" element={<AddRoom />} />
+          <Route path="list-room" element={<ListRoom />} />
         </Route>
 
         <Route
