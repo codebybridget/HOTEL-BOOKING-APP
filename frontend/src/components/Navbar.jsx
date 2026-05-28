@@ -4,15 +4,23 @@ import {
   useClerk,
   UserButton,
 } from "@clerk/clerk-react";
-import { Link, useLocation } from "react-router-dom";
+
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 
 import { useAppContext } from "../context/AppContext";
+
 import RoleSelect from "./RoleSelect";
 
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Hotels", path: "/rooms" },
-  { name: "Experience", path: "/experience" },
+  {
+    name: "Experience",
+    path: "/experience",
+  },
   { name: "About", path: "/about" },
 ];
 
@@ -34,11 +42,17 @@ const BookIcon = () => (
 );
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showRoleSelect, setShowRoleSelect] = useState(false);
+  const [isScrolled, setIsScrolled] =
+    useState(false);
+
+  const [isMenuOpen, setIsMenuOpen] =
+    useState(false);
+
+  const [showRoleSelect, setShowRoleSelect] =
+    useState(false);
 
   const { openSignIn } = useClerk();
+
   const location = useLocation();
 
   const {
@@ -54,58 +68,79 @@ const Navbar = () => {
   // SCROLL EFFECT
   useEffect(() => {
     const handleScroll = () => {
-      if (location.pathname !== "/") {
+      if (
+        location.pathname !== "/"
+      ) {
         setIsScrolled(true);
       } else {
-        setIsScrolled(window.scrollY > 10);
+        setIsScrolled(
+          window.scrollY > 10
+        );
       }
     };
 
     handleScroll();
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener(
+      "scroll",
+      handleScroll
+    );
 
     return () =>
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
   }, [location.pathname]);
 
   // LOCK BODY SCROLL
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen
-      ? "hidden"
-      : "auto";
+    document.body.style.overflow =
+      isMenuOpen
+        ? "hidden"
+        : "auto";
   }, [isMenuOpen]);
 
   // ROLE SELECTION
-  const handleRoleSelect = async (role) => {
-    try {
-      const { data } = await axios.post(
-        "/api/user/set-role",
-        { role }
-      );
+  const handleRoleSelect =
+    async (role) => {
+      try {
+        const { data } =
+          await axios.post(
+            "/api/user/set-role",
+            { role }
+          );
 
-      if (!data?.success) {
-        return;
+        if (!data?.success) {
+          return;
+        }
+
+        await fetchUser();
+
+        setShowRoleSelect(false);
+
+        if (
+          role ===
+          "hotelOwner"
+        ) {
+          setIsOwner(true);
+
+          setShowHotelReg(
+            true
+          );
+        } else {
+          setIsOwner(false);
+
+          navigate("/rooms");
+        }
+      } catch (error) {
+        console.error(
+          "Role selection error:",
+          error.response?.data ||
+            error.message
+        );
       }
-
-      await fetchUser();
-
-      setShowRoleSelect(false);
-
-      if (role === "hotelOwner") {
-        setIsOwner(true);
-        setShowHotelReg(true);
-      } else {
-        setIsOwner(false);
-        navigate("/rooms");
-      }
-    } catch (error) {
-      console.error(
-        "Role selection error:",
-        error.response?.data || error.message
-      );
-    }
-  };
+    };
 
   const textColor = isScrolled
     ? "text-gray-700"
@@ -126,57 +161,75 @@ const Navbar = () => {
             src={assets.logo}
             alt="logo"
             className={`h-9 ${
-              isScrolled ? "invert opacity-80" : ""
+              isScrolled
+                ? "invert opacity-80"
+                : ""
             }`}
           />
         </Link>
 
         {/* DESKTOP NAV */}
         <div className="hidden md:flex items-center gap-4 lg:gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`group flex flex-col gap-0.5 ${textColor}`}
-            >
-              {link.name}
+          {navLinks.map(
+            (link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`group flex flex-col gap-0.5 ${textColor}`}
+              >
+                {link.name}
 
-              <div
-                className={`${
-                  isScrolled
-                    ? "bg-gray-700"
-                    : "bg-white"
-                } h-0.5 w-0 group-hover:w-full transition-all`}
-              />
-            </Link>
-          ))}
-
-          {user && !isOwner && (
-            <button
-              onClick={() => setShowRoleSelect(true)}
-              className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
-            >
-              List your Hotel
-            </button>
+                <div
+                  className={`${
+                    isScrolled
+                      ? "bg-gray-700"
+                      : "bg-white"
+                  } h-0.5 w-0 group-hover:w-full transition-all`}
+                />
+              </Link>
+            )
           )}
 
-          {user && isOwner && (
-            <button
-              onClick={() => navigate("/owner")}
-              className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
-            >
-              Dashboard
-            </button>
-          )}
+          {user &&
+            !isOwner && (
+              <button
+                onClick={() =>
+                  setShowRoleSelect(
+                    true
+                  )
+                }
+                className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
+              >
+                List your Hotel
+              </button>
+            )}
+
+          {user &&
+            isOwner && (
+              <button
+                onClick={() =>
+                  navigate(
+                    "/owner"
+                  )
+                }
+                className={`border px-4 py-1 text-sm rounded-full ${textColor}`}
+              >
+                Dashboard
+              </button>
+            )}
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* DESKTOP RIGHT */}
         <div className="hidden md:flex items-center gap-4">
           <img
-            src={assets.searchIcon}
+            src={
+              assets.searchIcon
+            }
             alt="search"
             className={`h-7 ${
-              isScrolled ? "invert" : ""
+              isScrolled
+                ? "invert"
+                : ""
             }`}
           />
 
@@ -185,16 +238,22 @@ const Navbar = () => {
               <UserButton.MenuItems>
                 <UserButton.Action
                   label="My Bookings"
-                  labelIcon={<BookIcon />}
+                  labelIcon={
+                    <BookIcon />
+                  }
                   onClick={() =>
-                    navigate("/my-bookings")
+                    navigate(
+                      "/my-bookings"
+                    )
                   }
                 />
               </UserButton.MenuItems>
             </UserButton>
           ) : (
             <button
-              onClick={() => openSignIn()}
+              onClick={() =>
+                openSignIn()
+              }
               className={`px-8 py-2.5 rounded-full ${
                 isScrolled
                   ? "bg-black text-white"
@@ -208,20 +267,39 @@ const Navbar = () => {
 
         {/* MOBILE */}
         <div className="flex md:hidden items-center gap-3">
-          {user && (
+          {user ? (
             <UserButton afterSignOutUrl="/" />
+          ) : (
+            <button
+              onClick={() =>
+                openSignIn()
+              }
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                isScrolled
+                  ? "bg-black text-white"
+                  : "bg-white text-black"
+              }`}
+            >
+              Login
+            </button>
           )}
 
           <button
             onClick={() =>
-              setIsMenuOpen(!isMenuOpen)
+              setIsMenuOpen(
+                !isMenuOpen
+              )
             }
           >
             <img
-              src={assets.menuIcon}
+              src={
+                assets.menuIcon
+              }
               alt="menu"
               className={`h-4 ${
-                isScrolled ? "invert" : ""
+                isScrolled
+                  ? "invert"
+                  : ""
               }`}
             />
           </button>
@@ -237,51 +315,92 @@ const Navbar = () => {
         >
           <button
             className="absolute top-4 right-4 text-2xl"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() =>
+              setIsMenuOpen(
+                false
+              )
+            }
           >
             ✕
           </button>
 
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setIsMenuOpen(false)}
-              className="text-lg"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map(
+            (link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() =>
+                  setIsMenuOpen(
+                    false
+                  )
+                }
+                className="text-lg"
+              >
+                {link.name}
+              </Link>
+            )
+          )}
 
-          {user && !isOwner && (
+          {!user && (
             <button
               onClick={() => {
-                setIsMenuOpen(false);
-                setShowRoleSelect(true);
+                setIsMenuOpen(
+                  false
+                );
+
+                openSignIn();
               }}
-              className="border px-4 py-2 rounded-full"
+              className="bg-black text-white px-6 py-3 rounded-full"
             >
-              List your Hotel
+              Login
             </button>
           )}
 
-          {user && isOwner && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                navigate("/owner");
-              }}
-              className="border px-4 py-2 rounded-full"
-            >
-              Dashboard
-            </button>
-          )}
+          {user &&
+            !isOwner && (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(
+                    false
+                  );
+
+                  setShowRoleSelect(
+                    true
+                  );
+                }}
+                className="border px-4 py-2 rounded-full"
+              >
+                List your Hotel
+              </button>
+            )}
+
+          {user &&
+            isOwner && (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(
+                    false
+                  );
+
+                  navigate(
+                    "/owner"
+                  );
+                }}
+                className="border px-4 py-2 rounded-full"
+              >
+                Dashboard
+              </button>
+            )}
         </div>
       </nav>
 
       {/* ROLE MODAL */}
       {showRoleSelect && (
-        <RoleSelect onSelect={handleRoleSelect} />
+        <RoleSelect
+          onSelect={
+            handleRoleSelect
+          }
+        />
       )}
     </>
   );
